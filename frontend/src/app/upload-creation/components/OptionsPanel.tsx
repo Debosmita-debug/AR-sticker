@@ -1,7 +1,7 @@
 'use client';
 
 import { UploadOptions } from '@/hooks/useUpload';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 
 interface OptionsPanelProps {
   options: UploadOptions;

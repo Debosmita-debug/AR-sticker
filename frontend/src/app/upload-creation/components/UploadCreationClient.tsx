@@ -5,7 +5,7 @@ import DropZone from './DropZone';
 import OptionsPanel from './OptionsPanel';
 import ProgressBar from './ProgressBar';
 import SuccessPanel from './SuccessPanel';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 
 export default function UploadCreationClient() {
   const { state, options, setOptions, setImageFile, setVideoFile, submit, reset } = useUpload();

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import AppLogo from '@/components/ui/AppLogo';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 
 export default function Footer() {
   return (
