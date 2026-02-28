@@ -4,13 +4,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogIn, UserPlus, Loader2, Mail, Lock, ShieldCheck } from "lucide-react";
 import { login, register } from "@/lib/api";
-import { notifyAuthChange } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 
 interface AuthFormProps {
   onSuccess: () => void;
 }
 
 export default function AuthForm({ onSuccess }: AuthFormProps) {
+  const { signIn } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,12 +27,10 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     setLoading(true);
     setError("");
     try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await register(email, password);
-      }
-      notifyAuthChange();
+      const result = isLogin
+        ? await login(email, password)
+        : await register(email, password);
+      signIn(result.accessToken, result.refreshToken, result.user);
       onSuccess();
     } catch {
       setError(isLogin ? "Authentication failed: Invalid credentials" : "Sync failed: Registration error");

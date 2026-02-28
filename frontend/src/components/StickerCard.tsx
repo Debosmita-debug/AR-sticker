@@ -34,7 +34,7 @@ export default function StickerCard({ sticker, onDelete, index }: StickerCardPro
       {/* Media Preview */}
       <div className="relative h-56 bg-zinc-900 overflow-hidden">
         <img
-          src={sticker.thumbnailUrl}
+          src={sticker.imageUrl}
           alt={sticker.caption || "Sticker"}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           onError={(e) => {

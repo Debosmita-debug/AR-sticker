@@ -15,8 +15,11 @@ import FileDropzone from "@/components/FileDropzone";
 import UploadSuccess from "@/components/UploadSuccess";
 import Navbar from "@/components/Navbar";
 import { uploadSticker, type UploadResult } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { compressImage } from "@/lib/compressImage";
 
 export default function Home() {
+  const { accessToken } = useAuth();
   const [image, setImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [loop, setLoop] = useState(true);
@@ -42,12 +45,13 @@ export default function Home() {
     }, 300);
 
     try {
-      const res = await uploadSticker(image, video, {
+      const compressed = await compressImage(image);
+      const res = await uploadSticker(compressed, video, {
         loop,
         caption,
         password,
         expiry,
-      });
+      }, accessToken);
       setProgress(100);
       setTimeout(() => setResult(res), 400);
     } catch {
@@ -108,6 +112,7 @@ export default function Home() {
               key="success"
               arLink={result.arPageUrl}
               scanLink={result.scanPageUrl}
+              imageUrl={result.imageUrl}
               onReset={reset}
             />
           ) : (
@@ -175,9 +180,9 @@ export default function Home() {
                       onChange={(e) => setExpiry(e.target.value)}
                       className="flex-1 bg-transparent border-none text-sm focus:outline-none cursor-pointer"
                     >
-                      <option value="1h" className="bg-background">1 Hour</option>
-                      <option value="1d" className="bg-background">1 Day</option>
-                      <option value="7d" className="bg-background">7 Days</option>
+                      <option value="7" className="bg-background">7 Days</option>
+                      <option value="30" className="bg-background">30 Days</option>
+                      <option value="90" className="bg-background">90 Days</option>
                       <option value="never" className="bg-background">Unlimited</option>
                     </select>
                   </div>

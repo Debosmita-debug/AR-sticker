@@ -70,9 +70,9 @@ export const uploadToCloudinary = async (fileBuffer, fileName, resourceType = 'i
 };
 
 /**
- * Generate signed URL for secure delivery
+ * Generate signed URL for secure delivery (images & videos)
  * @param {string} publicId - Cloudinary public ID
- * @param {string} resourceType - 'image' or 'video'
+ * @param {string} resourceType - 'image', 'video', 'raw'
  * @param {number} expirySeconds - URL expiry time in seconds (default 1 hour)
  * @returns {string} - Signed URL
  */
@@ -89,6 +89,28 @@ export const generateSignedUrl = (publicId, resourceType = 'image', expirySecond
     return url;
   } catch (error) {
     logger.error(`Error generating signed URL: ${error.message}`);
+    throw error;
+  }
+};
+
+/**
+ * Generate plain public URL for raw files (e.g. .mind files).
+ * These must be publicly reachable by the browser without auth headers.
+ * @param {string} publicId - Cloudinary public ID
+ * @param {string} resourceType - 'raw' (default), 'image', 'video'
+ * @returns {string} - Public HTTPS URL
+ */
+export const generatePublicUrl = (publicId, resourceType = 'raw') => {
+  try {
+    const url = cloudinary.url(publicId, {
+      resource_type: resourceType,
+      secure: true,
+      type: 'upload'
+    });
+    logger.info(`Public URL generated for ${publicId}`);
+    return url;
+  } catch (error) {
+    logger.error(`Error generating public URL: ${error.message}`);
     throw error;
   }
 };
