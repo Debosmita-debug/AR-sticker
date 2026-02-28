@@ -1,7 +1,0 @@
-{
-    "css.customData": [],
-    "css.lint.unknownAtRules": "ignore",
-    "tailwindCSS.emmetCompletions": true,
-    "editor.autoSave": "afterDelay",
-    "files.autoSave": "afterDelay"
-}
