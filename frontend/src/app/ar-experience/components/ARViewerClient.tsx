@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Script from 'next/script';
 import Link from 'next/link';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 import { getStickerData, trackScan, StickerData } from '@/lib/api';
 
 interface ARViewerClientProps {
