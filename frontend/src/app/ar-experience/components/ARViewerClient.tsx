@@ -57,10 +57,35 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
     else if (isExpired(initialData)) setViewerState('expired');
   }, [initialData, fetchData, isExpired]);
 
+  // ── Request camera permission ────────────────────────
+  const requestCameraPermission = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      // Stop the stream - we just need permission
+      stream.getTracks().forEach(track => track.stop());
+      return true;
+    } catch (err: any) {
+      console.error('Camera permission error:', err);
+      const message = 
+        err.name === 'NotAllowedError' 
+          ? 'Camera access was denied. Please enable it in your browser settings.' 
+          : `Camera error: ${err.message}`;
+      setError(message);
+      setViewerState('error');
+      return false;
+    }
+  }, []);
+
   // ── Start AR once scripts + data are ready ────────────
   const startAR = useCallback(async () => {
     if (!stickerData || !scriptsReady || arStarted) return;
     if (typeof window === 'undefined' || !(window as any).MINDAR?.IMAGE) return;
+
+    // Request camera permission first
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return;
 
     const container = containerRef.current;
     if (!container) return;
@@ -71,6 +96,8 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
     try {
       const { MindARThree } = (window as any).MINDAR.IMAGE;
       const { THREE } = (window as any);
+
+      console.log('Initializing MindAR AR Viewer with:', stickerData.mindFileUrl);
 
       const mindar = new MindARThree({
         container,
@@ -129,7 +156,7 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
           requestAnimationFrame(fadeIn);
         }
 
-        video.play().catch(() => {});
+        video.play().catch((e) => console.warn('Video play error:', e));
 
         // Track scan once per session
         if (!hasTrackedRef.current) {
@@ -143,7 +170,9 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
         video.pause();
       };
 
+      console.log('Starting MindAR...');
       await mindar.start();
+      console.log('MindAR started successfully');
 
       renderer.setAnimationLoop(() => {
         if (videoTexture) videoTexture.needsUpdate = true;
@@ -151,11 +180,12 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
       });
 
     } catch (e: any) {
+      console.error('AR initialization error:', e);
       setError(e.message || 'AR initialization failed.');
       setViewerState('error');
       setArStarted(false);
     }
-  }, [stickerData, scriptsReady, arStarted, stickerId]);
+  }, [stickerData, scriptsReady, arStarted, stickerId, requestCameraPermission]);
 
   useEffect(() => {
     if (viewerState === 'ready' && scriptsReady && !arStarted) {
@@ -184,18 +214,86 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
     await fetchData(password);
   };
 
+  // ── Monitor script loading ─────────────────────────
+  useEffect(() => {
+    const checkLibraries = () => {
+      const hasAFrame = typeof (window as any).AFRAME !== 'undefined';
+      const hasMindAR = typeof (window as any).MINDAR !== 'undefined';
+      const hasTHREE = typeof (window as any).THREE !== 'undefined';
+
+      console.log('Library check:', {
+        THREE: hasTHREE,
+        AFRAME: hasAFrame,
+        MINDAR: hasMindAR,
+        MINDAR_IMAGE: hasMindAR ? typeof (window as any).MINDAR.IMAGE !== 'undefined' : false
+      });
+
+      // Check if MINDAR is properly configured
+      if (hasMindAR && !(window as any).MINDAR.IMAGE) {
+        console.warn('MINDAR loaded but IMAGE module not found');
+        return;
+      }
+
+      if (hasTHREE && hasMindAR && !scriptsReady) {
+        console.log('Required libraries ready, setting scriptsReady=true');
+        setScriptsReady(true);
+      }
+    };
+
+    checkLibraries();
+    const interval = setInterval(checkLibraries, 300);
+
+    const timeout = setTimeout(() => {
+      if (!scriptsReady) {
+        console.error('Timeout: scripts did not load after 30 seconds');
+        setError('Failed to load required libraries. Check your internet connection.');
+        setViewerState('error');
+      }
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [scriptsReady]);
+
   // ─────────────────────────────────────────────────────
   return (
     <>
-      {/* CDN Scripts */}
+      {/* THREE.js (required by MindAR) */}
+      <Script
+        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+        strategy="afterInteractive"
+        onLoad={() => console.log('THREE.js loaded')}
+        onError={() => console.error('Failed to load THREE.js')}
+      />
+
+      {/* A-Frame (optional for AR) */}
       <Script
         src="https://aframe.io/releases/1.4.0/aframe.min.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
+        onLoad={() => console.log('A-Frame loaded')}
+        onError={() => console.error('Failed to load A-Frame')}
       />
+
+      {/* MindAR ImageTarget - primary */}
       <Script
         src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"
-        strategy="beforeInteractive"
-        onLoad={() => setScriptsReady(true)}
+        strategy="afterInteractive"
+        onLoad={() => console.log('MindAR loaded from jsdelivr')}
+        onError={() => {
+          console.error('Failed to load MindAR from jsdelivr, trying unpkg...');
+          // Fallback to unpkg if jsdelivr fails
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/mind-ar@1.2.2/dist/mindar-image-three.prod.js';
+          script.onload = () => console.log('MindAR loaded from unpkg fallback');
+          script.onerror = () => {
+            console.error('All MindAR CDNs failed');
+            setError('Failed to load MindAR library. Try refreshing the page.');
+            setViewerState('error');
+          };
+          document.head.appendChild(script);
+        }}
       />
 
       {/* AR Render Container */}
