@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import AppIcon from './Appicon';
 
 interface AppLogoProps {
@@ -6,9 +5,11 @@ interface AppLogoProps {
     size?: number;
 }
 
+// AppLogo is a presentational component and does not render a Link
+// to avoid nested anchor elements when wrapped by a parent Link.
 export default function AppLogo({ className = '', size }: AppLogoProps) {
     return (
-        <Link href="/" className={`flex items-center gap-2 ${className}`}>
+        <div className={`flex items-center gap-2 ${className}`}>
             <div className="relative">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7C3AFF] to-[#00D4FF] flex items-center justify-center shadow-[0_0_15px_rgba(124,58,255,0.4)]">
                     <AppIcon name="CubeTransparentIcon" size={24} className="text-white" variant="solid" />
@@ -22,6 +23,6 @@ export default function AppLogo({ className = '', size }: AppLogoProps) {
                     ARSticker<span className="text-[#00D4FF]">Hub</span>
                 </span>
             </div>
-        </Link>
+        </div>
     );
 }
