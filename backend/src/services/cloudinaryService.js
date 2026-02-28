@@ -1,11 +1,31 @@
 import { v2 as cloudinary } from 'cloudinary';
 import logger from '../utils/logger.js';
 
+// Validate Cloudinary credentials (non-blocking on import)
+const validateCloudinaryConfig = () => {
+  const requiredEnvVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    logger.error(`Missing Cloudinary configuration: ${missingVars.join(', ')}`);
+    return false;
+  }
+  
+  logger.info(`✓ Cloudinary configured successfully (cloud: ${process.env.CLOUDINARY_CLOUD_NAME})`);
+  return true;
+};
+
+// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Log warning if config is incomplete
+if (!validateCloudinaryConfig()) {
+  logger.warn('⚠️  Cloudinary will not work until environment variables are configured');
+}
 
 /**
  * Upload file to Cloudinary
@@ -26,13 +46,24 @@ export const uploadToCloudinary = async (fileBuffer, fileName, resourceType = 'i
       },
       (error, result) => {
         if (error) {
-          logger.error(`Cloudinary upload error: ${error.message}`);
-          return reject(error);
+          const errorMessage = error.message || error.toString() || 'Unknown upload error';
+          logger.error(`Cloudinary upload error: ${errorMessage}`);
+          const err = new Error(`Cloudinary upload failed: ${errorMessage}`);
+          err.originalError = error;
+          return reject(err);
         }
         logger.info(`File uploaded to Cloudinary: ${result.public_id}`);
         resolve(result);
       }
     );
+
+    uploadStream.on('error', (streamError) => {
+      const errorMessage = streamError.message || streamError.toString() || 'Unknown stream error';
+      logger.error(`Upload stream error: ${errorMessage}`);
+      const err = new Error(`Upload stream failed: ${errorMessage}`);
+      err.originalError = streamError;
+      reject(err);
+    });
 
     uploadStream.end(fileBuffer);
   });
@@ -115,7 +146,8 @@ export const uploadWithRetry = async (fileBuffer, fileName, resourceType = 'imag
       return result;
     } catch (error) {
       lastError = error;
-      logger.warn(`Upload attempt ${attempt} failed: ${error.message}`);
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      logger.warn(`Upload attempt ${attempt} failed: ${errorMessage}`);
       
       // Exponential backoff
       if (attempt < maxRetries) {
@@ -124,5 +156,6 @@ export const uploadWithRetry = async (fileBuffer, fileName, resourceType = 'imag
     }
   }
   
-  throw new Error(`Upload failed after ${maxRetries} attempts: ${lastError.message}`);
+  const finalErrorMessage = lastError?.message || lastError?.toString() || 'Unknown error after retries';
+  throw new Error(`Upload failed after ${maxRetries} attempts: ${finalErrorMessage}`);
 };

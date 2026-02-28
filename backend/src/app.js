@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import DOMPurify from 'isomorphic-dompurify';
 import fileUpload from 'express-fileupload';
@@ -15,8 +14,6 @@ import userRoutes from './routes/user.js';
 
 // Import middleware
 import { generalApiRateLimiter } from './middleware/rateLimiter.js';
-
-dotenv.config();
 
 const app = express();
 

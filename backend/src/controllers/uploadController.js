@@ -128,12 +128,19 @@ export const uploadSticker = async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error(`Upload error: ${error.message}`);
+    const errorMessage = error?.message || error?.toString() || 'Unknown upload error';
+    logger.error(`Upload error: ${errorMessage}`);
+    
+    // Log stack trace for debugging
+    if (error?.stack) {
+      logger.error(`Stack trace: ${error.stack}`);
+    }
+    
     res.status(500).json({
       success: false,
       error: {
         code: 'UPLOAD_ERROR',
-        message: error.message
+        message: errorMessage
       }
     });
   } finally {
