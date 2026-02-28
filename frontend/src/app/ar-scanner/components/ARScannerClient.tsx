@@ -22,7 +22,7 @@ export default function ARScannerClient() {
   const searchParams = useSearchParams();
   const stickerId = searchParams?.get('id') || '';
 
-  const [state, setState] = useState<ScannerState>('permission');
+  const [state, setState] = useState<ScannerState>(stickerId ? 'permission' : 'permission');
   const [errorMsg, setErrorMsg] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -320,32 +320,45 @@ export default function ARScannerClient() {
       />
 
       {/* ── Permission Screen ── */}
-      {state === 'permission' && (
+      {state === 'permission' && !stickerId && (
         <div className="fixed inset-0 z-[9995] flex items-center justify-center bg-[#0A0B14] grid-bg px-6">
           <div className="max-w-sm w-full text-center space-y-6">
             <div className="relative inline-flex">
               <div className="w-20 h-20 rounded-2xl bg-[rgba(0,212,255,0.1)] border border-[rgba(0,212,255,0.3)] flex items-center justify-center mx-auto">
-                <Icon name="CameraIcon" size={36} className="text-[#00D4FF]" />
+                <Icon name="PhotoIcon" size={36} className="text-[#00D4FF]" />
               </div>
-              <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#7C3AFF] flex items-center justify-center">
-                <Icon name="LockOpenIcon" size={12} className="text-white" />
-              </span>
             </div>
             <div>
-              <h1 className="font-heading font-bold text-2xl text-[#F0F2FF] mb-2">Camera Access Needed</h1>
+              <h1 className="font-heading font-bold text-2xl text-[#F0F2FF] mb-2">Scan AR Sticker</h1>
               <p className="text-[#8B91B8] text-sm leading-relaxed">
-                ARStickerHub needs your camera to scan and detect AR target images. Your video is never recorded or stored.
+                Point your camera at the target image to reveal the augmented reality experience.
               </p>
             </div>
-            <button
-              onClick={requestCamera}
-              className="btn-primary w-full py-4 text-sm rounded-btn flex items-center justify-center gap-2"
-            >
-              <Icon name="CameraIcon" size={16} />
-              Allow Camera & Start Scanning
-            </button>
+
+            {/* Enter Sticker ID */}
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Or enter sticker ID here..."
+                className="input-field w-full px-4 py-3 text-sm text-center"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && (e.currentTarget.value || stickerId)) {
+                    setState('permission');
+                    requestCamera();
+                  }
+                }}
+              />
+              <button
+                onClick={requestCamera}
+                className="btn-primary w-full py-4 text-sm rounded-btn flex items-center justify-center gap-2"
+              >
+                <Icon name="CameraIcon" size={16} />
+                Start Camera Scan
+              </button>
+            </div>
+
             <Link href="/upload-creation" className="text-xs text-[#4A5080] hover:text-[#8B91B8] transition-colors underline underline-offset-2">
-              ← Back to Create
+              ← Create a Sticker Instead
             </Link>
           </div>
         </div>
