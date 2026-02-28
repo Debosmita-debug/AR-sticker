@@ -1,27 +1,42 @@
-import Link from 'next/link';
-import AppIcon from './Appicon';
+'use client';
+
+import React from 'react';
+import AppIcon from './AppIcon';
+import AppImage from './AppImage';
 
 interface AppLogoProps {
-    className?: string;
-    size?: number;
+  src?: string; // Image source (optional)
+  text?: string; // Logo text (optional)
+  iconName?: string; // Icon name when no image
+  size?: number; // Size for icon/image
+  className?: string; // Additional classes
+  onClick?: () => void; // Click handler
 }
 
-export default function AppLogo({ className = '', size }: AppLogoProps) {
-    return (
-        <Link href="/" className={`flex items-center gap-2 ${className}`}>
-            <div className="relative">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7C3AFF] to-[#00D4FF] flex items-center justify-center shadow-[0_0_15px_rgba(124,58,255,0.4)]">
-                    <AppIcon name="CubeTransparentIcon" size={24} className="text-white" variant="solid" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#1A1D2D] border-2 border-[#1A1D2D] flex items-center justify-center">
-                    <div className="w-full h-full rounded-full bg-[#00D4FF] animate-pulse-ring" />
-                </div>
-            </div>
-            <div>
-                <span className="font-heading font-bold text-lg md:text-xl text-glow tracking-tight text-[#F0F2FF]">
-                    ARSticker<span className="text-[#00D4FF]">Hub</span>
-                </span>
-            </div>
-        </Link>
-    );
+function AppLogo({
+  src = '/file.svg',
+  text,
+  iconName = 'SparklesIcon',
+  size = 64,
+  className = '',
+  onClick,
+}: AppLogoProps) {
+  return (
+    <div
+      className={`flex items-center gap-2 ${onClick ? 'cursor-pointer hover:opacity-80' : ''} ${className}`}
+      onClick={onClick}
+    >
+      {/* Show image if src provided, otherwise show icon */}
+      {src ? (
+        <AppImage src={src} alt="Logo" width={size} height={size} className="flex-shrink-0" />
+      ) : (
+        <AppIcon name={iconName} size={size} className="flex-shrink-0" />
+      )}
+
+      {/* Show text if provided */}
+      {text && <span className="text-xl font-bold">{text}</span>}
+    </div>
+  );
 }
+
+export default AppLogo;

@@ -1,24 +1,37 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import React from 'react';
+import type { Metadata, Viewport } from 'next';
+import '../styles/index.css';
 import '../styles/globals.css';
 
-export const metadata: Metadata = {
-  title: 'ARStickerHub — Bring Stickers to Life',
-  description: 'Upload a target image and AR video to create your own augmented reality sticker experience.',
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  title: 'Next.js with Tailwind CSS',
+  description: 'A boilerplate project with Next.js and Tailwind CSS',
+  icons: {
+    icon: [{ url: '/file.svg', type: 'image/svg+xml' }],
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
-          rel="stylesheet"
+      <body>
+        {children}
+        <script
+          type="module"
+          async
+          src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Farstickerh7197back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.17"
         />
-      </head>
-      <body>{children}</body>
+        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" />
+      </body>
     </html>
   );
 }

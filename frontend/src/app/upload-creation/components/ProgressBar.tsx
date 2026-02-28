@@ -1,28 +1,35 @@
-import React from 'react';
-import Icon from '@/components/ui/Appicon';
+'use client';
 
 interface ProgressBarProps {
-    progress: number;
+  progress: number;
+  label?: string;
 }
 
-export default function ProgressBar({ progress }: ProgressBarProps) {
-    return (
-        <div className="w-full space-y-2">
-            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider">
-                <span className="text-[#F0F2FF] flex items-center gap-1.5">
-                    <Icon name="ArrowUpTrayIcon" size={12} className="text-[#00D4FF]" />
-                    Uploading
-                </span>
-                <span className="text-[#00D4FF]">{Math.round(progress)}%</span>
-            </div>
-            <div className="h-2 w-full bg-[rgba(255,255,255,0.05)] rounded-full overflow-hidden border border-[rgba(255,255,255,0.05)]">
-                <div
-                    className="h-full bg-gradient-to-r from-[#7C3AFF] to-[#00D4FF] transition-all duration-300 ease-out relative"
-                    style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-                >
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.3)_50%,transparent_100%)] animate-scan opacity-50" />
-                </div>
-            </div>
-        </div>
-    );
+export default function ProgressBar({ progress, label }: ProgressBarProps) {
+  const clampedProgress = Math.min(100, Math.max(0, progress));
+
+  return (
+    <div className="space-y-2" role="progressbar" aria-valuenow={clampedProgress} aria-valuemin={0} aria-valuemax={100}>
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-[#8B91B8] font-medium">
+          {label || (clampedProgress < 100 ? 'Uploading & processing…' : 'Complete!')}
+        </span>
+        <span className="font-mono font-bold text-[#7C3AFF]">{clampedProgress}%</span>
+      </div>
+      <div className="w-full h-2 bg-[rgba(124,58,255,0.12)] rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-300 ease-out progress-shimmer"
+          style={{ width: `${clampedProgress}%` }}
+        />
+      </div>
+      {clampedProgress < 100 && clampedProgress > 0 && (
+        <p className="text-xs text-[#4A5080]">
+          {clampedProgress < 60
+            ? 'Uploading your files…'
+            : clampedProgress < 90
+            ? 'Generating AR target…' :'Almost ready…'}
+        </p>
+      )}
+    </div>
+  );
 }

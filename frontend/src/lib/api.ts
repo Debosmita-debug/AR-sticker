@@ -1,85 +1,134 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-export interface StickerData {
-    id: string;
-    imageUrl?: string;
-    videoUrl: string;
-    mindFileUrl: string;
-    options: {
-        loop?: boolean;
-        caption?: string;
-        expiresAt?: string;
-        password?: boolean;
-    };
+// ── Types ──────────────────────────────────────────────
+export interface UploadResponse {
+  id: string;
+  arPageUrl: string;
+  scanPageUrl: string;
 }
 
-export interface UploadResponse {
-    stickerId: string;
-    qrUrl: string;
-    viewerUrl: string;
-    scannerUrl: string;
+export interface StickerData {
+  id: string;
+  imageUrl: string;
+  videoUrl: string;
+  mindFileUrl: string;
+  options: {
+    loop: boolean;
+    caption?: string;
+    hasPassword: boolean;
+    expiresAt?: string;
+  };
+  scanCount: number;
+  createdAt: string;
 }
 
 export interface AuthResponse {
-    token: string;
-    user?: any;
+  accessToken: string;
+  refreshToken: string;
 }
 
-async function apiFetch(path: string, init?: RequestInit) {
-    const res = await fetch(`${API_BASE}${path}`, init);
-    if (!res.ok) {
-        const err: any = new Error(`API error: ${res.status}`);
-        err.status = res.status;
-        const body = await res.json().catch(() => ({}));
-        err.message = body.detail || body.message || err.message;
-        throw err;
-    }
-    return res.json();
+export interface DashboardSticker {
+  id: string;
+  imageUrl: string;
+  caption?: string;
+  scanCount: number;
+  createdAt: string;
+  arPageUrl: string;
 }
 
-export async function loginUser(credentials: any): Promise<AuthResponse> {
-    return { token: 'demo-token' }; // Mock or actual login API here
-}
-
-export async function registerUser(credentials: any): Promise<AuthResponse> {
-    return { token: 'demo-token' };
-}
-
-export function setMemoryToken(token: string) {
-    // Store token in memory or local storage securely
-}
-
-export async function getStickerData(id: string, password?: string): Promise<StickerData> {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (password) headers['X-Sticker-Password'] = password;
-    return apiFetch(`/api/stickers/${id}`, { headers });
-}
-
-export async function trackScan(id: string): Promise<void> {
-    try {
-        await apiFetch(`/api/stickers/${id}/scan`, { method: 'POST' });
-    } catch {
-        // Silently fail
-    }
-}
-
+// ── Upload ─────────────────────────────────────────────
 export async function uploadSticker(
-    imageFile: File,
-    videoFile: File,
-    options: Record<string, any>,
-    onProgress?: (pct: number) => void
+  formData: FormData,
+  onProgress?: (pct: number) => void
 ): Promise<UploadResponse> {
-    const form = new FormData();
-    form.append('image', imageFile);
-    form.append('video', videoFile);
-    form.append('options', JSON.stringify(options));
-    // In a real app we would use XHR for progress tracking
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${BASE_URL}/api/upload`);
+
+    const token = getMemoryToken();
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
     if (onProgress) {
-        onProgress(50);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
     }
-    const result = await apiFetch('/api/stickers', { method: 'POST', body: form });
-    if (onProgress) {
-        onProgress(100);
-    }
-    return result;
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText));
+      } else {
+        reject(new Error(`Upload failed: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(formData);
+  });
 }
+
+// ── Sticker Data ───────────────────────────────────────
+export async function getStickerData(id: string, password?: string): Promise<StickerData> {
+  const headers: Record<string, string> = {};
+  if (password) headers['X-Sticker-Password'] = password;
+  const token = getMemoryToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}/ar/${id}`, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(err.message || 'Failed to load sticker'), { status: res.status });
+  }
+  return res.json();
+}
+
+// ── Scan Tracking ──────────────────────────────────────
+export async function trackScan(id: string): Promise<void> {
+  try {
+    await fetch(`${BASE_URL}/api/scan/${id}`, { method: 'POST' });
+  } catch {
+    // Non-critical — swallow errors
+  }
+}
+
+// ── Auth ───────────────────────────────────────────────
+export async function registerUser(email: string, password: string): Promise<AuthResponse> {
+  const res = await fetch(`${BASE_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error('Registration failed');
+  return res.json();
+}
+
+export async function loginUser(email: string, password: string): Promise<AuthResponse> {
+  const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error('Login failed');
+  return res.json();
+}
+
+// ── Dashboard ──────────────────────────────────────────
+export async function getDashboardStickers(token: string): Promise<DashboardSticker[]> {
+  const res = await fetch(`${BASE_URL}/api/dashboard`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch dashboard');
+  return res.json();
+}
+
+export async function deleteSticker(id: string, token: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/api/sticker/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Delete failed');
+}
+
+// ── In-memory token helper (used internally) ──────────
+let _memToken: string | null = null;
+export function setMemoryToken(t: string | null) { _memToken = t; }
+export function getMemoryToken(): string | null { return _memToken; }

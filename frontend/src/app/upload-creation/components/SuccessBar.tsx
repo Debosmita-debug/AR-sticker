@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
-import Icon from '@/components/ui/Appicon';
+import Icon from '@/components/ui/AppIcon';
 
 interface SuccessBarProps {
     qrUrl?: string;

@@ -1,55 +1,56 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useCallback, useRef } from 'react';
 import { loginUser, registerUser, setMemoryToken, AuthResponse } from '@/lib/api';
 
+interface AuthState {
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+}
+
 export function useAuth() {
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<AuthState>({
+    accessToken: null,
+    isAuthenticated: false,
+    loading: false,
+    error: null,
+  });
+  // Refresh token kept in memory only — never in localStorage
+  const refreshTokenRef = useRef<string | null>(null);
 
-    useEffect(() => {
-        // Demo mode: auto-login or load from local storage
-        const stored = localStorage.getItem('auth_token');
-        if (stored) {
-            setMemoryToken(stored);
-            setUser({ id: 'demo-user', name: 'Demo User' });
-        }
-    }, []);
+  const handleAuthResponse = useCallback((res: AuthResponse) => {
+    setMemoryToken(res.accessToken);
+    refreshTokenRef.current = res.refreshToken;
+    setState({ accessToken: res.accessToken, isAuthenticated: true, loading: false, error: null });
+  }, []);
 
-    const login = async (credentials: any) => {
-        try {
-            setLoading(true);
-            const res: AuthResponse = await loginUser(credentials);
-            setMemoryToken(res.token);
-            localStorage.setItem('auth_token', res.token);
-            setUser(res.user || { id: 'demo-user', name: 'Demo User' });
-            setError(null);
-        } catch (e: any) {
-            setError(e.message || 'Login failed');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const login = useCallback(async (email: string, password: string) => {
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await loginUser(email, password);
+      handleAuthResponse(res);
+    } catch (e: any) {
+      setState((s) => ({ ...s, loading: false, error: e.message || 'Login failed.' }));
+    }
+  }, [handleAuthResponse]);
 
-    const register = async (credentials: any) => {
-        try {
-            setLoading(true);
-            const res: AuthResponse = await registerUser(credentials);
-            setMemoryToken(res.token);
-            localStorage.setItem('auth_token', res.token);
-            setUser(res.user || { id: 'demo-user', name: 'Demo User' });
-            setError(null);
-        } catch (e: any) {
-            setError(e.message || 'Registration failed');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const register = useCallback(async (email: string, password: string) => {
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await registerUser(email, password);
+      handleAuthResponse(res);
+    } catch (e: any) {
+      setState((s) => ({ ...s, loading: false, error: e.message || 'Registration failed.' }));
+    }
+  }, [handleAuthResponse]);
 
-    const logout = () => {
-        setMemoryToken('');
-        localStorage.removeItem('auth_token');
-        setUser(null);
-    };
+  const logout = useCallback(() => {
+    setMemoryToken(null);
+    refreshTokenRef.current = null;
+    setState({ accessToken: null, isAuthenticated: false, loading: false, error: null });
+  }, []);
 
-    return { user, loading, error, login, register, logout };
+  return { ...state, login, register, logout };
 }

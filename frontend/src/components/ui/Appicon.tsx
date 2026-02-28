@@ -1,23 +1,55 @@
-import React from 'react';
-import * as SolidIcons from '@heroicons/react/24/solid';
-import * as OutlineIcons from '@heroicons/react/24/outline';
+'use client';
 
-interface AppIconProps {
-    name: string;
+import React from 'react';
+import * as HeroIcons from '@heroicons/react/24/outline';
+import * as HeroIconsSolid from '@heroicons/react/24/solid';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+
+type IconVariant = 'outline' | 'solid';
+
+interface IconProps {
+    name: string; // Changed to string to accept dynamic values
+    variant?: IconVariant;
     size?: number;
     className?: string;
-    variant?: 'solid' | 'outline';
+    onClick?: () => void;
+    disabled?: boolean;
+    [key: string]: any;
 }
 
-export default function AppIcon({ name, size = 24, className = '', variant = 'outline' }: AppIconProps) {
-    const IconComponent = variant === 'solid'
-        ? (SolidIcons as any)[name]
-        : (OutlineIcons as any)[name];
+function Icon({
+    name,
+    variant = 'outline',
+    size = 24,
+    className = '',
+    onClick,
+    disabled = false,
+    ...props
+}: IconProps) {
+    const iconSet = variant === 'solid' ? HeroIconsSolid : HeroIcons;
+    const IconComponent = iconSet[name as keyof typeof iconSet] as React.ComponentType<any>;
 
     if (!IconComponent) {
-        console.warn(`Icon ${name} not found in Heroicons.`);
-        return <span className={`inline-block w-${size / 4} h-${size / 4} ${className}`} />;
+        return (
+            <QuestionMarkCircleIcon
+                width={size}
+                height={size}
+                className={`text-gray-400 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+                onClick={disabled ? undefined : onClick}
+                {...props}
+            />
+        );
     }
 
-    return <IconComponent style={{ width: size, height: size }} className={className} aria-hidden="true" />;
+    return (
+        <IconComponent
+            width={size}
+            height={size}
+            className={`${disabled ? 'opacity-50 cursor-not-allowed' : onClick ? 'cursor-pointer hover:opacity-80' : ''} ${className}`}
+            onClick={disabled ? undefined : onClick}
+            {...props}
+        />
+    );
 }
+
+export default Icon; 
