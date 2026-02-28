@@ -4,7 +4,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { UploadResponse } from '@/lib/api';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 
 // QR code loaded only on client
 const QRCode = dynamic(() => import('qrcode.react').then((m) => m.QRCodeSVG), { ssr: false });

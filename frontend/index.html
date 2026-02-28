@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AR Sticker — Create</title>
+  <link rel="stylesheet" href="./styles.css">
+  <!-- QR lib + Chart if needed later -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <main class="container">
+    <h1>Create AR Video Sticker</h1>
+    <div class="row">
+      <section class="col card">
+        <h3>Target Image</h3>
+        <div id="imageDrop" class="dropzone">Drop image or click to upload<input id="imageInput" type="file" accept="image/*" style="display:none"/></div>
+        <div id="imagePreview" class="small" style="margin-top:8px"></div>
+      </section>
+
+      <section class="col card">
+        <h3>AR Video</h3>
+        <div id="videoDrop" class="dropzone">Drop video or click to upload<input id="videoInput" type="file" accept="video/mp4,video/webm" style="display:none"/></div>
+        <div id="videoPreview" class="small" style="margin-top:8px"></div>
+      </section>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>Options</h3>
+      <div class="options">
+        <label><input id="loopOpt" type="checkbox"> Loop video</label>
+        <label>Caption <input id="caption" type="text" placeholder="Short caption"></label>
+        <label>Password <input id="password" type="password" placeholder="Optional"></label>
+        <label>Expire in <select id="expiry"><option value="0">Never</option><option value="1">1 day</option><option value="7">7 days</option></select></label>
+      </div>
+      <div style="margin-top:12px" class="row">
+        <button id="uploadBtn" class="btn">Upload & Generate</button>
+        <div style="flex:1">
+          <div class="progress" style="margin-top:8px"><i id="progressBar"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="result" class="card" style="display:none;margin-top:12px"></div>
+  </main>
+  <script type="module" src="./index.js"></script>
+</body>
+</html>

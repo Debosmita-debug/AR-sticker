@@ -56,7 +56,9 @@ export async function uploadSticker(
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(JSON.parse(xhr.responseText));
+        const json = JSON.parse(xhr.responseText);
+        // Unwrap data from { success, data } response
+        resolve(json.data || json);
       } else {
         reject(new Error(`Upload failed: ${xhr.status}`));
       }
@@ -76,9 +78,10 @@ export async function getStickerData(id: string, password?: string): Promise<Sti
   const res = await fetch(`${BASE_URL}/ar/${id}`, { headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(err.message || 'Failed to load sticker'), { status: res.status });
+    throw Object.assign(new Error(err.error?.message || err.message || 'Failed to load sticker'), { status: res.status });
   }
-  return res.json();
+  const json = await res.json();
+  return json.data || json;
 }
 
 // ── Scan Tracking ──────────────────────────────────────
@@ -98,7 +101,8 @@ export async function registerUser(email: string, password: string): Promise<Aut
     body: JSON.stringify({ email, password }),
   });
   if (!res.ok) throw new Error('Registration failed');
-  return res.json();
+  const json = await res.json();
+  return json.data || json;
 }
 
 export async function loginUser(email: string, password: string): Promise<AuthResponse> {
@@ -108,20 +112,22 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
     body: JSON.stringify({ email, password }),
   });
   if (!res.ok) throw new Error('Login failed');
-  return res.json();
+  const json = await res.json();
+  return json.data || json;
 }
 
 // ── Dashboard ──────────────────────────────────────────
 export async function getDashboardStickers(token: string): Promise<DashboardSticker[]> {
-  const res = await fetch(`${BASE_URL}/api/dashboard`, {
+  const res = await fetch(`${BASE_URL}/api/auth/dashboard`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch dashboard');
-  return res.json();
+  const json = await res.json();
+  return json.data?.stickers || [];
 }
 
 export async function deleteSticker(id: string, token: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/sticker/${id}`, {
+  const res = await fetch(`${BASE_URL}/ar/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import Link from 'next/link';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 import { getStickerData, trackScan } from '@/lib/api';
 
 type ScannerState =

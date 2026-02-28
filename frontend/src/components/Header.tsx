@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AppLogo from '@/components/ui/AppLogo';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 
 const navLinks = [
   { label: 'Create', href: '/upload-creation', icon: 'CloudArrowUpIcon' },

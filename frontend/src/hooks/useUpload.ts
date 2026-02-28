@@ -105,12 +105,14 @@ export function useUpload() {
     setState((s) => ({ ...s, uploading: true, progress: 0, error: null }));
     try {
       const fd = new FormData();
-      fd.append('targetImage', state.imageFile);
-      fd.append('arVideo', state.videoFile);
-      fd.append('loop', String(options.loop));
-      fd.append('caption', options.caption);
-      fd.append('password', options.password);
-      fd.append('expiryDays', options.expiryDays);
+      fd.append('image', state.imageFile);
+      fd.append('video', state.videoFile);
+      fd.append('options', JSON.stringify({
+        loop: options.loop,
+        caption: options.caption,
+        password: options.password || undefined,
+        expiryDays: parseInt(options.expiryDays) || 30
+      }));
 
       const result = await uploadSticker(fd, (pct) =>
         setState((s) => ({ ...s, progress: pct }))

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import UploadCreationClient from './components/UploadCreationClient';
-import Icon from '@/components/ui/AppIcon';
+import Icon from '@/components/ui/Appicon';
 
 export const metadata: Metadata = {
   title: 'Create AR Sticker — ARStickerHub',
