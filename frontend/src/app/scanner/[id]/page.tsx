@@ -98,7 +98,7 @@ export default function ScannerPage({ params }: PageProps) {
       mindarScript.onload = () => {
         mindARLoaded.current = true;
         // If sticker data is already loaded, try injecting the scene
-        if (sticker && (phase === "preflight" || phase === "ar-init")) {
+        if (sticker && phase === "ar-init") {
           tryInjectScene();
         }
       };
@@ -140,7 +140,8 @@ export default function ScannerPage({ params }: PageProps) {
       getStickerData(id, resolvedPw)
         .then((data) => {
           setSticker(data);
-          setPhase("preflight");
+          // Auto-start: skip preflight, jump straight to AR init
+          setPhase("ar-init");
         })
         .catch((err: Error) => {
           if (err.message === "PASSWORD_REQUIRED") { setPhase("password"); }
@@ -280,12 +281,12 @@ export default function ScannerPage({ params }: PageProps) {
     }
   }, [sticker, id]);
 
-  // Trigger scene when scripts arrive + sticker ready
+  // Auto-start: when phase becomes ar-init and scripts are already loaded, inject immediately
   useEffect(() => {
-    if (phase === "preflight" && aframeLoaded.current && mindARLoaded.current) {
-      // Scripts already loaded before user clicked "Start AR" — ready to inject
+    if (phase === "ar-init" && aframeLoaded.current && mindARLoaded.current && sticker) {
+      tryInjectScene();
     }
-  }, [phase]);
+  }, [phase, sticker, tryInjectScene]);
 
   // When user clicks "Start AR" on preflight screen
   const startAR = useCallback(() => {
@@ -462,9 +463,9 @@ export default function ScannerPage({ params }: PageProps) {
               </div>
 
               <div className="space-y-3">
-                <h2 className="text-4xl font-black italic tracking-tight">Lens Ready</h2>
+                <h2 className="text-4xl font-black italic tracking-tight">Scanner Paused</h2>
                 <p className="text-muted-foreground text-base leading-relaxed font-medium">
-                  Point your camera at the physical sticker to materialise the digital layer.
+                  Tap below to restart the camera and scan your sticker.
                 </p>
               </div>
 
@@ -472,10 +473,10 @@ export default function ScannerPage({ params }: PageProps) {
                 onClick={startAR}
                 className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-xl tracking-[0.15em] uppercase shadow-[0_0_40px_rgba(168,85,247,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-4"
               >
-                Activate Camera
+                Restart Camera
               </button>
 
-              <Link href="/" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors block">
+              <Link href="/scan" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors block">
                 Go Back
               </Link>
             </div>
