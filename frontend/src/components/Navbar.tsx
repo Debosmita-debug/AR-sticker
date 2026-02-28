@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Camera, LayoutDashboard, Upload, Sparkles } from "lucide-react";
+import { Camera, LayoutDashboard, Upload, ScanLine, Sparkles } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Create", icon: Upload },
+  { href: "/scan", label: "Scan", icon: ScanLine },
   { href: "/dashboard", label: "Vault", icon: LayoutDashboard },
 ];
 
