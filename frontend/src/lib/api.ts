@@ -1,23 +1,15 @@
-const API_BASE = "/api";
+/**
+ * api.ts – All frontend ↔ backend communication.
+ * Auth tokens are managed by AuthContext (in memory only, never localStorage).
+ */
 
-let authToken: string | null = null;
-
-export const setToken = (token: string | null) => {
-  authToken = token;
-};
-
-export const getToken = () => authToken;
-
-const headers = (): HeadersInit => {
-  const h: HeadersInit = {};
-  if (authToken) h["Authorization"] = `Bearer ${authToken}`;
-  return h;
-};
+// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface UploadOptions {
   loop: boolean;
   caption: string;
   password: string;
+  /** "7" | "30" | "90" | "365" | "never" */
   expiry: string;
 }
 
@@ -25,172 +17,213 @@ export interface UploadResult {
   id: string;
   arPageUrl: string;
   scanPageUrl: string;
+  imageUrl: string;
+  expiresAt: string;
+  createdAt: string;
 }
 
 export interface StickerData {
+  id: string;
   imageUrl: string;
   videoUrl: string;
   mindFileUrl: string;
   options: {
     loop: boolean;
     caption: string;
-    password: string;
-    expiry: string;
   };
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface StickerMetadata {
+  id: string;
+  caption: string;
+  isPasswordProtected: boolean;
+  scanCount: number;
+  createdAt: string;
+  expiresAt: string;
+  daysUntilExpiry: number;
 }
 
 export interface DashboardSticker {
   id: string;
-  thumbnailUrl: string;
+  imageUrl: string;
+  videoUrl: string;
   scanCount: number;
   createdAt: string;
-  caption: string;
+  expiresAt: string;
+  options: {
+    loop: boolean;
+    caption: string;
+    expiryDays: number;
+  };
 }
 
-// ── Demo mode helpers ──────────────────────────────────────────────
-// Since there's no backend yet, we simulate API responses so the full
-// UI is interactive and testable.
-
-const DEMO = true; // flip to false once a real backend is connected
-
-let demoStickers: DashboardSticker[] = [];
-
-function delay(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+export interface AuthUser {
+  id: string;
+  email: string;
+  plan: "free" | "pro" | "enterprise";
 }
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
+export interface ScanAnalytic {
+  timestamp: string;
+  userAgent: string;
+  country: string;
 }
 
-// ── API functions ──────────────────────────────────────────────────
+export interface ScanAnalyticsResult {
+  id: string;
+  scanCount: number;
+  lastScannedAt: string | null;
+  scanHistory: ScanAnalytic[];
+}
+
+// ── Internal helpers ─────────────────────────────────────────────────────────
+
+function authHeaders(token?: string | null): HeadersInit {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function expiryToDays(expiry: string): number {
+  switch (expiry) {
+    case "7": return 7;
+    case "30": return 30;
+    case "90": return 90;
+    case "365":
+    case "never":
+    default: return 365;
+  }
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = (json as { error?: { message?: string } })?.error?.message || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return (json as { data: T }).data;
+}
+
+// ── Upload ───────────────────────────────────────────────────────────────────
+// All requests go directly to the backend, bypassing the Next.js proxy which
+// is unreliable for both large bodies and regular GET requests in v16.
+const BACKEND_DIRECT = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 export async function uploadSticker(
   image: File,
   video: File,
-  options: UploadOptions
+  options: UploadOptions,
+  token?: string | null
 ): Promise<UploadResult> {
-  if (DEMO) {
-    await delay(1500);
-    const id = uid();
-    // Store in demo stickers list
-    demoStickers.unshift({
-      id,
-      thumbnailUrl: URL.createObjectURL(image),
-      scanCount: 0,
-      createdAt: new Date().toISOString(),
-      caption: options.caption || "Untitled Sticker",
-    });
-    return {
-      id,
-      arPageUrl: `/ar/${id}`,
-      scanPageUrl: `/scanner/${id}`,
-    };
-  }
-
   const fd = new FormData();
   fd.append("image", image);
   fd.append("video", video);
-  fd.append("loop", String(options.loop));
-  fd.append("caption", options.caption);
-  fd.append("password", options.password);
-  fd.append("expiry", options.expiry);
+  fd.append("options", JSON.stringify({
+    loop: options.loop,
+    caption: options.caption || undefined,
+    password: options.password || undefined,
+    expiryDays: expiryToDays(options.expiry),
+  }));
 
-  const res = await fetch(`${API_BASE}/upload`, {
+  const res = await fetch(`${BACKEND_DIRECT}/api/upload`, {
     method: "POST",
-    headers: headers(),
+    headers: authHeaders(token),
     body: fd,
   });
-  if (!res.ok) throw new Error("Upload failed");
-  return res.json();
+  return handleResponse<UploadResult>(res);
 }
 
-export async function getStickerData(id: string): Promise<StickerData> {
-  if (DEMO) {
-    await delay(500);
-    return {
-      imageUrl: "/placeholder.svg",
-      videoUrl: "",
-      mindFileUrl: `/mind/${id}.mind`,
-      options: { loop: true, caption: "Demo Sticker", password: "", expiry: "never" },
-    };
+// ── AR data ──────────────────────────────────────────────────────────────────
+
+export async function getStickerData(
+  id: string,
+  password?: string,
+  token?: string | null
+): Promise<StickerData> {
+  const params = password ? `?password=${encodeURIComponent(password)}` : "";
+  const res = await fetch(`${BACKEND_DIRECT}/ar/${id}${params}`, { headers: authHeaders(token) });
+
+  if (res.status === 403) {
+    const json = await res.json().catch(() => ({}));
+    const code = (json as { error?: { code?: string } })?.error?.code;
+    if (code === "PASSWORD_REQUIRED") throw new Error("PASSWORD_REQUIRED");
+    if (code === "INVALID_PASSWORD") throw new Error("INVALID_PASSWORD");
   }
+  if (res.status === 410) throw new Error("STICKER_EXPIRED");
+  if (res.status === 404) throw new Error("STICKER_NOT_FOUND");
 
-  const res = await fetch(`/ar/${id}`, { headers: headers() });
-  if (!res.ok) throw new Error("Sticker not found");
-  return res.json();
+  return handleResponse<StickerData>(res);
 }
+
+export async function getStickerMetadata(id: string): Promise<StickerMetadata> {
+  const res = await fetch(`${BACKEND_DIRECT}/ar/${id}/metadata`);
+  if (res.status === 410) throw new Error("STICKER_EXPIRED");
+  return handleResponse<StickerMetadata>(res);
+}
+
+// ── Scan tracking ─────────────────────────────────────────────────────────────
 
 export async function trackScan(id: string): Promise<void> {
-  if (DEMO) {
-    const s = demoStickers.find((x) => x.id === id);
-    if (s) s.scanCount++;
-    return;
-  }
-  await fetch(`${API_BASE}/scan/${id}`, { method: "POST", headers: headers() });
+  await fetch(`${BACKEND_DIRECT}/api/scan/${id}`, { method: "POST" }).catch(() => {});
 }
 
-export async function login(email: string, password: string): Promise<string> {
-  if (DEMO) {
-    await delay(600);
-    if (!email || !password) throw new Error("Login failed");
-    const token = "demo_token_" + uid();
-    setToken(token);
-    return token;
-  }
+// ── Auth ──────────────────────────────────────────────────────────────────────
 
-  const res = await fetch(`${API_BASE}/auth/login`, {
+export interface LoginResult {
+  user: AuthUser;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export async function login(email: string, password: string): Promise<LoginResult> {
+  const res = await fetch(`${BACKEND_DIRECT}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error("Login failed");
-  const data = await res.json();
-  setToken(data.token);
-  return data.token;
+  return handleResponse<LoginResult>(res);
 }
 
-export async function register(email: string, password: string): Promise<string> {
-  if (DEMO) {
-    await delay(600);
-    if (!email || !password) throw new Error("Registration failed");
-    const token = "demo_token_" + uid();
-    setToken(token);
-    return token;
-  }
-
-  const res = await fetch(`${API_BASE}/auth/register`, {
+export async function register(email: string, password: string): Promise<LoginResult> {
+  const res = await fetch(`${BACKEND_DIRECT}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error("Registration failed");
-  const data = await res.json();
-  setToken(data.token);
-  return data.token;
+  return handleResponse<LoginResult>(res);
 }
 
-export async function getDashboard(): Promise<DashboardSticker[]> {
-  if (DEMO) {
-    await delay(400);
-    return demoStickers;
-  }
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 
-  const res = await fetch(`${API_BASE}/dashboard`, { headers: headers() });
-  if (!res.ok) throw new Error("Failed to load dashboard");
-  return res.json();
+export interface DashboardResult {
+  user: AuthUser;
+  stickers: DashboardSticker[];
+  totalStickers: number;
+  plan: string;
 }
 
-export async function deleteSticker(id: string): Promise<void> {
-  if (DEMO) {
-    await delay(300);
-    demoStickers = demoStickers.filter((s) => s.id !== id);
-    return;
-  }
+export async function getDashboard(token: string): Promise<DashboardResult> {
+  const res = await fetch(`${BACKEND_DIRECT}/api/auth/dashboard`, { headers: authHeaders(token) });
+  return handleResponse<DashboardResult>(res);
+}
 
-  const res = await fetch(`${API_BASE}/sticker/${id}`, {
+// ── Delete sticker ─────────────────────────────────────────────────────────────
+
+export async function deleteSticker(id: string, token: string): Promise<void> {
+  const res = await fetch(`${BACKEND_DIRECT}/api/auth/${id}`, {
     method: "DELETE",
-    headers: headers(),
+    headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to delete sticker");
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    const msg = (json as { error?: { message?: string } })?.error?.message || "Failed to delete";
+    throw new Error(msg);
+  }
+}
+
+// ── Scan analytics ─────────────────────────────────────────────────────────────
+
+export async function getScanAnalytics(id: string, token: string): Promise<ScanAnalyticsResult> {
+  const res = await fetch(`${BACKEND_DIRECT}/api/scan/${id}/analytics`, { headers: authHeaders(token) });
+  return handleResponse<ScanAnalyticsResult>(res);
 }

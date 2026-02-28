@@ -1,17 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, ExternalLink, Sparkles, Share2, Rocket } from "lucide-react";
+import { Copy, Check, ExternalLink, Sparkles, Share2, Rocket, ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface UploadSuccessProps {
   arLink: string;
   scanLink: string;
+  imageUrl?: string;
   onReset: () => void;
 }
 
-export default function UploadSuccess({ arLink, scanLink, onReset }: UploadSuccessProps) {
+export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: UploadSuccessProps) {
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
 
@@ -55,15 +56,37 @@ export default function UploadSuccess({ arLink, scanLink, onReset }: UploadSucce
       </div>
 
       <div className="glass rounded-[2.5rem] p-10 neon-border space-y-8 max-w-sm mx-auto shadow-2xl shadow-primary/10">
-        <div className="bg-white/5 p-6 rounded-3xl inline-block border border-white/5 shadow-inner">
-          <QRCodeSVG
-            value={fullLink}
-            size={200}
-            bgColor="transparent"
-            fgColor="#a855f7"
-            level="H"
-            includeMargin={false}
-          />
+        {/* Show the uploaded target image instead of a QR code */}
+        <div className="bg-white/5 p-4 rounded-3xl inline-block border border-white/5 shadow-inner">
+          {imageUrl ? (
+            <div className="relative w-[200px] h-[200px] rounded-2xl overflow-hidden">
+              <Image
+                src={imageUrl}
+                alt="Your AR target image"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+              <div className="absolute inset-0 border-2 border-primary/40 rounded-2xl pointer-events-none" />
+              <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1">
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-primary text-center">
+                  AR Target Image
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="w-[200px] h-[200px] rounded-2xl bg-white/5 flex items-center justify-center">
+              <ImageIcon className="w-12 h-12 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground leading-relaxed">
+            Print this image or show it on a screen.
+            <br />
+            Scan it with the AR camera to see the video.
+          </p>
         </div>
 
         <div className="space-y-4">

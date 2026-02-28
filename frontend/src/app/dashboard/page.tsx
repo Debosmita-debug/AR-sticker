@@ -7,40 +7,37 @@ import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/AuthForm";
 import StickerCard from "@/components/StickerCard";
 import { getDashboard, deleteSticker, type DashboardSticker } from "@/lib/api";
-import { isAuthenticated, logout, onAuthChange } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 export default function Dashboard() {
-    const [authed, setAuthed] = useState(false);
+    const { accessToken, isAuthenticated, signOut } = useAuth();
     const [stickers, setStickers] = useState<DashboardSticker[]>([]);
     const [loading, setLoading] = useState(false);
     const [tab, setTab] = useState<"grid" | "analytics">("grid");
 
-    // Initial check on mount
-    useEffect(() => {
-        setAuthed(isAuthenticated());
-        return onAuthChange(() => setAuthed(isAuthenticated()));
-    }, []);
-
     const loadStickers = useCallback(async () => {
+        if (!accessToken) return;
         setLoading(true);
         try {
-            const data = await getDashboard();
-            setStickers(data);
+            const data = await getDashboard(accessToken);
+            setStickers(data.stickers);
         } catch {
             // empty state
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [accessToken]);
 
     useEffect(() => {
-        if (authed) loadStickers();
-    }, [authed, loadStickers]);
+        if (isAuthenticated) loadStickers();
+        else setStickers([]);
+    }, [isAuthenticated, loadStickers]);
 
     const handleDelete = async (id: string) => {
+        if (!accessToken) return;
         try {
-            await deleteSticker(id);
+            await deleteSticker(id, accessToken);
             setStickers((s) => s.filter((st) => st.id !== id));
         } catch {
             // silent fail
@@ -48,12 +45,11 @@ export default function Dashboard() {
     };
 
     const handleLogout = () => {
-        logout();
-        setAuthed(false);
+        signOut();
         setStickers([]);
     };
 
-    if (!authed) {
+    if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-background text-foreground">
                 <Navbar />
@@ -70,7 +66,7 @@ export default function Dashboard() {
                             <h2 className="text-2xl font-bold">Sticker Dashboard</h2>
                             <p className="text-muted-foreground text-sm mt-2">Sign in to manage your AR creations</p>
                         </div>
-                        <AuthForm onSuccess={() => setAuthed(true)} />
+                        <AuthForm onSuccess={() => {/* AuthContext handles state */}} />
                     </motion.div>
                 </div>
             </div>
