@@ -1,7 +1,9 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, ExternalLink, PartyPopper } from "lucide-react";
-import { useState } from "react";
+import { Copy, Check, ExternalLink, Sparkles, Share2, Rocket } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface UploadSuccessProps {
   arLink: string;
@@ -11,8 +13,13 @@ interface UploadSuccessProps {
 
 export default function UploadSuccess({ arLink, scanLink, onReset }: UploadSuccessProps) {
   const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState("");
 
-  const fullLink = `${window.location.origin}${arLink}`;
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const fullLink = `${origin}${arLink}`;
 
   const copy = async () => {
     await navigator.clipboard.writeText(fullLink);
@@ -22,62 +29,81 @@ export default function UploadSuccess({ arLink, scanLink, onReset }: UploadSucce
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 text-center"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="space-y-10 text-center py-8"
     >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
-        className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center neon-glow"
-      >
-        <PartyPopper className="w-8 h-8 text-primary" />
-      </motion.div>
-
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Sticker Created!</h2>
-        <p className="text-muted-foreground mt-1">Share this link or scan the QR code</p>
+      <div className="relative inline-block">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          className="absolute -inset-4 border border-dashed border-primary/40 rounded-full"
+        />
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
+          className="w-24 h-24 mx-auto rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30 relative z-10 shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+        >
+          <Rocket className="w-12 h-12 text-primary" />
+        </motion.div>
       </div>
 
-      <div className="glass rounded-2xl p-6 neon-border space-y-4">
-        <div className="bg-background/50 p-4 rounded-xl inline-block">
+      <div className="space-y-2">
+        <h2 className="text-4xl font-black text-foreground italic tracking-tight uppercase">Reality Manifested</h2>
+        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-xs">Sticker synchronization successful</p>
+      </div>
+
+      <div className="glass rounded-[2.5rem] p-10 neon-border space-y-8 max-w-sm mx-auto shadow-2xl shadow-primary/10">
+        <div className="bg-white/5 p-6 rounded-3xl inline-block border border-white/5 shadow-inner">
           <QRCodeSVG
             value={fullLink}
-            size={180}
+            size={200}
             bgColor="transparent"
-            fgColor="hsl(174, 100%, 50%)"
-            level="M"
+            fgColor="#a855f7"
+            level="H"
+            includeMargin={false}
           />
         </div>
 
-        <div className="flex items-center gap-2 glass rounded-lg p-2">
-          <code className="flex-1 text-sm text-primary truncate px-2">{fullLink}</code>
-          <button
-            onClick={copy}
-            className="shrink-0 p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          </button>
+        <div className="space-y-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Access Token Link</p>
+          <div className="flex items-center gap-2 glass rounded-2xl p-2 border border-white/5">
+            <code className="flex-1 text-[11px] text-zinc-400 truncate px-3 font-mono">
+              {fullLink.replace(/^https?:\/\//, '')}
+            </code>
+            <button
+              onClick={copy}
+              className="shrink-0 w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-3 justify-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
         <button
           onClick={onReset}
-          className="px-6 py-2.5 rounded-lg glass text-foreground hover:bg-secondary transition-colors text-sm font-medium"
+          className="w-full sm:w-auto px-8 h-14 rounded-2xl glass text-foreground hover:bg-white/5 border border-white/10 transition-all text-xs font-bold uppercase tracking-widest"
         >
-          Create Another
+          Initialize New
         </button>
         <a
           href={scanLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium flex items-center gap-2"
+          className="w-full sm:w-auto px-8 h-14 rounded-2xl bg-primary text-primary-foreground hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 group"
         >
-          <ExternalLink className="w-4 h-4" />
-          Try Scanner
+          <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          Test Payload
+          <ExternalLink className="w-3 h-3 opacity-50" />
         </a>
+      </div>
+
+      <div className="flex items-center justify-center gap-2 text-primary opacity-40">
+        <Sparkles className="w-3 h-3" />
+        <span className="text-[8px] font-black uppercase tracking-[0.5em]">System: All sectors green</span>
       </div>
     </motion.div>
   );
