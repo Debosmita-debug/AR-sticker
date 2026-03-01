@@ -54,9 +54,9 @@ export default function AnalyticsChart({ stickers }: AnalyticsChartProps) {
             label: "Scan Count",
             data,
             backgroundColor: data.map((_, i) =>
-              `rgba(168, 85, 247, ${0.9 - i * 0.06})`
+              `rgba(73, 109, 219, ${0.9 - i * 0.06})`
             ),
-            borderColor: "rgba(168, 85, 247, 0.6)",
+            borderColor: "rgba(73, 109, 219, 0.6)",
             borderWidth: 1,
             borderRadius: 8,
             borderSkipped: false,
@@ -70,9 +70,9 @@ export default function AnalyticsChart({ stickers }: AnalyticsChartProps) {
           legend: { display: false },
           tooltip: {
             backgroundColor: "rgba(24, 24, 27, 0.95)",
-            titleColor: "#a855f7",
+            titleColor: "#496DDB",
             bodyColor: "#fafafa",
-            borderColor: "rgba(168, 85, 247, 0.3)",
+            borderColor: "rgba(73, 109, 219, 0.3)",
             borderWidth: 1,
             padding: 12,
             callbacks: {

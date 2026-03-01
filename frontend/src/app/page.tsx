@@ -79,10 +79,10 @@ export default function Home() {
       {/* Hero section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/5 opacity-50" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -z-10" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] -z-10" />
+        <div className="absolute top-0 right-0 w-[250px] h-[250px] sm:w-[500px] sm:h-[500px] bg-primary/20 rounded-full blur-[80px] sm:blur-[120px] -z-10" />
+        <div className="absolute bottom-0 left-0 w-[250px] h-[250px] sm:w-[500px] sm:h-[500px] bg-accent/10 rounded-full blur-[80px] sm:blur-[120px] -z-10" />
 
-        <div className="relative max-w-2xl mx-auto px-4 pt-32 pb-12 text-center">
+        <div className="relative max-w-2xl mx-auto px-4 pt-24 sm:pt-32 pb-8 sm:pb-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -92,11 +92,11 @@ export default function Home() {
               <Sparkles className="w-3 h-3" />
               AR-Powered Video Stickers
             </div>
-            <h1 className="text-5xl sm:text-6xl font-bold leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight">
               Turn any print into
               <span className="block gradient-text mt-2 pb-2">living media</span>
             </h1>
-            <p className="text-muted-foreground mt-6 text-lg max-w-md mx-auto leading-relaxed">
+            <p className="text-muted-foreground mt-4 sm:mt-6 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
               Upload an image and video to create magic links.
               Scan with any smartphone to see your content come alive in AR.
             </p>
@@ -105,7 +105,7 @@ export default function Home() {
       </div>
 
       {/* Main content */}
-      <div className="max-w-2xl mx-auto px-4 pb-24">
+      <div className="max-w-2xl mx-auto px-4 pb-16 sm:pb-24">
         <AnimatePresence mode="wait">
           {result ? (
             <UploadSuccess
@@ -144,7 +144,7 @@ export default function Home() {
               </div>
 
               {/* Options */}
-              <div className="glass rounded-2xl p-6 neon-border space-y-6">
+              <div className="glass rounded-2xl p-4 sm:p-6 neon-border space-y-4 sm:space-y-6">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider">
                   <span className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -262,7 +262,7 @@ export default function Home() {
                 whileTap={{ scale: canUpload ? 0.98 : 1 }}
                 onClick={handleUpload}
                 disabled={!canUpload}
-                className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] transition-all disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed group"
+                className="w-full h-12 sm:h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(73,109,219,0.3)] hover:shadow-[0_0_40px_rgba(73,109,219,0.5)] transition-all disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed group"
               >
                 {uploading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />

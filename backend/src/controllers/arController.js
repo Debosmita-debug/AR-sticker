@@ -1,5 +1,6 @@
 import Sticker from '../models/Sticker.js';
 import { generatePublicUrl } from '../services/cloudinaryService.js';
+import { invalidateUniversalCache } from '../services/universalMindService.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -201,6 +202,9 @@ export const deleteSticker = async (req, res) => {
     // Mark as inactive instead of hard delete (soft delete)
     sticker.isActive = false;
     await sticker.save();
+
+    // Invalidate universal scanner cache so deleted sticker is excluded
+    invalidateUniversalCache();
 
     logger.info(`Sticker deleted: ${id} by user ${userId}`);
 

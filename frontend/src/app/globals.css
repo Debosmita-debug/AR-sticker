@@ -4,15 +4,12 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-primary: #a855f7;
-  /* Purple */
+  --color-primary: #496DDB;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #3f3f46;
-  /* Zinc-700ish */
+  --color-secondary: #3a3f54;
   --color-secondary-foreground: #fafafa;
-  --color-accent: #f0abfc;
-  /* Pink-300 */
-  --color-accent-foreground: #09090b;
+  --color-accent: #717EC3;
+  --color-accent-foreground: #ffffff;
 
   --color-background: #09090b;
   --color-foreground: #fafafa;
@@ -23,11 +20,11 @@
 
   --color-border: #27272a;
   --color-input: #27272a;
-  --color-ring: #a855f7;
+  --color-ring: #496DDB;
 
-  --color-neon-purple: #a855f7;
-  --color-neon-pink: #f472b6;
-  --color-neon-blue: #3b82f6;
+  --color-neon-blue: #496DDB;
+  --color-neon-light: #717EC3;
+  --color-neon-soft: #8b96d4;
 
   --radius-lg: 1rem;
   --radius-md: 0.75rem;
@@ -56,18 +53,18 @@ body {
 
   .neon-border {
     position: relative;
-    border: 1px solid rgba(168, 85, 247, 0.2);
-    box-shadow: 0 0 15px rgba(168, 85, 247, 0.05);
+    border: 1px solid rgba(73, 109, 219, 0.2);
+    box-shadow: 0 0 15px rgba(73, 109, 219, 0.05);
     transition: all 0.3s ease;
   }
 
   .neon-border:hover {
-    border-color: rgba(168, 85, 247, 0.4);
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
+    border-color: rgba(73, 109, 219, 0.4);
+    box-shadow: 0 0 20px rgba(73, 109, 219, 0.1);
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #f472b6 100%);
+    background: linear-gradient(135deg, #496DDB 0%, #717EC3 50%, #8b96d4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% auto;
@@ -75,11 +72,11 @@ body {
   }
 
   .neon-glow {
-    box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 15px rgba(73, 109, 219, 0.3);
   }
 
   .neon-glow:hover {
-    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 25px rgba(73, 109, 219, 0.5);
   }
 
   @keyframes shine {

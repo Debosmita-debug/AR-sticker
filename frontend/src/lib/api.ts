@@ -167,6 +167,29 @@ export async function trackScan(id: string): Promise<void> {
   await fetch(`${BACKEND_DIRECT}/api/scan/${id}`, { method: "POST" }).catch(() => {});
 }
 
+// ── Universal scanner ─────────────────────────────────────────────────────────
+
+export interface UniversalTarget {
+  targetIndex: number;
+  stickerId: string;
+  videoUrl: string;
+  imageUrl: string;
+  options: {
+    loop: boolean;
+    caption: string;
+  };
+}
+
+export interface UniversalScannerData {
+  mindFileUrl: string | null;
+  targets: UniversalTarget[];
+}
+
+export async function getUniversalTargets(): Promise<UniversalScannerData> {
+  const res = await fetch(`${BACKEND_DIRECT}/api/scan/universal`);
+  return handleResponse<UniversalScannerData>(res);
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export interface LoginResult {

@@ -471,7 +471,7 @@ export default function ScannerPage({ params }: PageProps) {
 
               <button
                 onClick={startAR}
-                className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-xl tracking-[0.15em] uppercase shadow-[0_0_40px_rgba(168,85,247,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-4"
+                className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-xl tracking-[0.15em] uppercase shadow-[0_0_40px_rgba(73,109,219,0.4)] hover:shadow-[0_0_60px_rgba(73,109,219,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-4"
               >
                 Restart Camera
               </button>
@@ -544,7 +544,7 @@ export default function ScannerPage({ params }: PageProps) {
                     <motion.div
                       animate={{ top: ["10%", "90%", "10%"] }}
                       transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_10px_rgba(73,109,219,0.8)]"
                     />
                   </div>
                 </motion.div>

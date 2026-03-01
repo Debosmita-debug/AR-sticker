@@ -1,9 +1,16 @@
 import express from 'express';
-import { recordScan, getScanAnalytics, resetScanCount } from '../controllers/scanController.js';
+import { getUniversalTargets, recordScan, getScanAnalytics, resetScanCount } from '../controllers/scanController.js';
 import { authenticate, optionalAuth } from '../middleware/auth.js';
 import { scanRateLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
+
+/**
+ * GET /api/scan/universal
+ * Get combined .mind file + target mapping for universal scanner
+ * Public endpoint
+ */
+router.get('/universal', getUniversalTargets);
 
 /**
  * POST /api/scan/:id

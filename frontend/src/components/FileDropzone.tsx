@@ -96,9 +96,9 @@ export default function FileDropzone({ label, description, accept, icon, file, o
             }}
           >
             {icon === "image" ? (
-              <img src={preview} alt="Preview" className="w-full h-52 object-contain bg-black/40" />
+              <img src={preview} alt="Preview" className="w-full h-40 sm:h-52 object-contain bg-black/40" />
             ) : (
-              <video src={preview} className="w-full h-52 object-cover bg-black/40" muted loop autoPlay />
+              <video src={preview} className="w-full h-40 sm:h-52 object-cover bg-black/40" muted loop autoPlay />
             )}
 
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -147,8 +147,8 @@ export default function FileDropzone({ label, description, accept, icon, file, o
               };
               input.click();
             }}
-            className={`relative flex flex-col items-center justify-center h-52 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-500 group overflow-hidden ${isDragging
-                ? "border-primary bg-primary/10 shadow-[0_0_40px_rgba(168,85,247,0.1)]"
+            className={`relative flex flex-col items-center justify-center h-40 sm:h-52 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-500 group overflow-hidden ${isDragging
+                ? "border-primary bg-primary/10 shadow-[0_0_40px_rgba(73,109,219,0.1)]"
                 : "border-white/10 hover:border-primary/50 hover:bg-white/5"
               }`}
           >
@@ -184,7 +184,7 @@ export default function FileDropzone({ label, description, accept, icon, file, o
                   animate={{ top: '100%' }}
                   exit={{ opacity: 0 }}
                   transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                  className="absolute left-0 right-0 h-1 bg-primary/40 shadow-[0_0_15px_rgba(168,85,247,0.5)] z-20"
+                  className="absolute left-0 right-0 h-1 bg-primary/40 shadow-[0_0_15px_rgba(73,109,219,0.5)] z-20"
                 />
               )}
             </AnimatePresence>

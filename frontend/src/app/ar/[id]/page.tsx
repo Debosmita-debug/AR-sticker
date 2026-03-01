@@ -10,7 +10,10 @@ import {
   Layers,
   ScanLine,
   Lock,
+  QrCode,
+  Share2,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { getStickerMetadata, type StickerMetadata } from "@/lib/api";
 import PasswordModal from "@/components/PasswordModal";
 import Link from "next/link";
@@ -28,6 +31,12 @@ export default function ARViewerPage({ params }: PageProps) {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [verifiedPassword, setVerifiedPassword] = useState<string | undefined>(undefined);
   const [pwError, setPwError] = useState("");
+  const [showQR, setShowQR] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -67,17 +76,17 @@ export default function ARViewerPage({ params }: PageProps) {
 
   if (expired) {
     return (
-      <div className="fixed inset-0 bg-background flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-background flex items-center justify-center p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass rounded-[2rem] p-10 neon-border text-center max-w-sm w-full space-y-6 shadow-2xl shadow-accent/10"
+          className="glass rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-10 neon-border text-center max-w-sm w-full space-y-4 sm:space-y-6 shadow-2xl shadow-accent/10"
         >
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/30">
-            <Clock className="w-10 h-10 text-accent" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl sm:rounded-3xl bg-accent/20 flex items-center justify-center border border-accent/30">
+            <Clock className="w-8 h-8 sm:w-10 sm:h-10 text-accent" />
           </div>
           <div>
-            <h2 className="text-3xl font-black italic">Layer Expired</h2>
+            <h2 className="text-2xl sm:text-3xl font-black italic">Layer Expired</h2>
             <p className="text-muted-foreground mt-2 leading-relaxed">
               This digital manifestation has reached its expiration.
             </p>
@@ -95,17 +104,17 @@ export default function ARViewerPage({ params }: PageProps) {
 
   if (error || !meta) {
     return (
-      <div className="fixed inset-0 bg-background flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-background flex items-center justify-center p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-[2rem] p-10 neon-border text-center max-w-sm w-full space-y-6 shadow-2xl shadow-red-500/10"
+          className="glass rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-10 neon-border text-center max-w-sm w-full space-y-4 sm:space-y-6 shadow-2xl shadow-red-500/10"
         >
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-red-500/10 flex items-center justify-center border border-red-500/30">
-            <AlertTriangle className="w-10 h-10 text-red-500" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl sm:rounded-3xl bg-red-500/10 flex items-center justify-center border border-red-500/30">
+            <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
           </div>
           <div>
-            <h2 className="text-3xl font-black italic">Void Detected</h2>
+            <h2 className="text-2xl sm:text-3xl font-black italic">Void Detected</h2>
             <p className="text-muted-foreground mt-2 leading-relaxed">
               {error || "This sticker doesn't exist."}
             </p>
@@ -158,7 +167,7 @@ export default function ARViewerPage({ params }: PageProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass rounded-[2.5rem] p-10 neon-border text-center max-w-md w-full space-y-8 shadow-2xl shadow-primary/10 border-white/5"
+        className="glass rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-10 neon-border text-center max-w-md w-full space-y-6 sm:space-y-8 shadow-2xl shadow-primary/10 border-white/5"
       >
         {/* Icon */}
         <div className="relative inline-block">
@@ -174,7 +183,7 @@ export default function ARViewerPage({ params }: PageProps) {
 
         {/* Heading */}
         <div className="space-y-3">
-          <h2 className="text-4xl font-black italic tracking-tight">AR Layer Ready</h2>
+          <h2 className="text-2xl sm:text-4xl font-black italic tracking-tight">AR Layer Ready</h2>
           {meta.caption && (
             <p className="text-primary/80 font-semibold text-base">{meta.caption}</p>
           )}
@@ -209,10 +218,39 @@ export default function ARViewerPage({ params }: PageProps) {
           </div>
         )}
 
+        {/* QR Code for sharing */}
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowQR(!showQR)}
+            className="flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-full glass border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/30 transition-all"
+          >
+            {showQR ? <Layers className="w-3 h-3" /> : <QrCode className="w-3 h-3" />}
+            {showQR ? "Hide QR" : "Share via QR Code"}
+          </button>
+          {showQR && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="flex flex-col items-center gap-3"
+            >
+              <div className="bg-white p-3 rounded-2xl inline-block">
+                <QRCodeSVG
+                  value={`${origin}/scanner/${id}`}
+                  size={160}
+                  level="M"
+                />
+              </div>
+              <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">
+                Anyone can scan this to view the AR experience
+              </p>
+            </motion.div>
+          )}
+        </div>
+
         {/* CTA */}
         <Link
           href={scannerHref}
-          className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-xl tracking-[0.15em] uppercase shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] transition-all flex items-center justify-center gap-4 group"
+          className="w-full h-14 sm:h-16 rounded-2xl bg-primary text-primary-foreground font-black text-lg sm:text-xl tracking-[0.15em] uppercase shadow-[0_0_30px_rgba(73,109,219,0.3)] hover:shadow-[0_0_50px_rgba(73,109,219,0.5)] transition-all flex items-center justify-center gap-3 sm:gap-4 group"
         >
           <ScanLine className="w-7 h-7 group-hover:scale-110 transition-transform" />
           Launch Scanner
