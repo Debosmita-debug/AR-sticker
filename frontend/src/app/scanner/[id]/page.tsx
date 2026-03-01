@@ -203,11 +203,12 @@ export default function ScannerPage({ params }: PageProps) {
   device-orientation-permission-ui="enabled: false"
   style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:20;"
 >
-  <a-assets timeout="10000">
+  <a-assets timeout="15000">
     <video
       id="ar-video"
       src="${sticker.videoUrl}"
       ${loopAttr}
+      autoplay
       playsinline
       webkit-playsinline
       crossorigin="anonymous"
@@ -221,18 +222,29 @@ export default function ScannerPage({ params }: PageProps) {
   <a-entity mindar-image-target="targetIndex: 0">
     <a-plane
       id="ar-plane"
-      src="#ar-video"
       position="0 0 0"
       height="${planeHeight.toFixed(4)}"
       width="${planeWidth.toFixed(4)}"
       rotation="0 0 0"
-      material="shader: flat; side: double; transparent: true; opacity: 1"
+      material="shader: flat; src: #ar-video; side: double; transparent: true; opacity: 1"
     ></a-plane>
   </a-entity>
 </a-scene>`;
 
     // Inject into DOM
     sceneContainerRef.current.innerHTML = sceneHTML;
+
+    // Pre-play video muted to establish autoplay context and warm up WebGL texture
+    const videoEl = document.getElementById("ar-video") as HTMLVideoElement | null;
+    if (videoEl) {
+      videoEl.muted = true;
+      videoEl.play().catch(() => {});
+
+      // Log video load errors for debugging
+      videoEl.addEventListener("error", () => {
+        console.error("[AR] Video failed to load:", videoEl.error?.message, videoEl.src);
+      });
+    }
 
     // Wait for scene to initialise before attaching listeners
     const scene = sceneContainerRef.current.querySelector("#ar-scene") as Element & { systems?: Record<string, { stop?: () => void }> };
@@ -257,16 +269,23 @@ export default function ScannerPage({ params }: PageProps) {
         // Haptic feedback
         navigator.vibrate?.(200);
 
-        // Play video (preloaded with preload="auto")
+        // Play video – ensure it's playing first, then try to unmute
         const video = document.getElementById("ar-video") as HTMLVideoElement | null;
         if (video) {
-          // Unmute after first user interaction (autoplay policy)
-          video.muted = false;
-          video.play().catch(() => {
-            // Autoplay blocked – try muted
-            video.muted = true;
-            video.play().catch(() => {});
-          });
+          video.currentTime = 0;
+          const playPromise = video.play();
+          if (playPromise) {
+            playPromise
+              .then(() => {
+                // Successfully playing – try to unmute
+                try { video.muted = false; } catch {}
+              })
+              .catch(() => {
+                // Autoplay blocked – ensure muted play works
+                video.muted = true;
+                video.play().catch(() => {});
+              });
+          }
         }
       });
 
