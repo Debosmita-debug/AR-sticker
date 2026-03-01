@@ -1,19 +1,21 @@
-import React from 'react';
-import type { Metadata, Viewport } from 'next';
-import '../styles/index.css';
-import '../styles/globals.css';
+import type { Metadata } from "next";
+import { Inter, Outfit } from "next/font/google";
+import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-};
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  title: 'Next.js with Tailwind CSS',
-  description: 'A boilerplate project with Next.js and Tailwind CSS',
-  icons: {
-    icon: [{ url: '/file.svg', type: 'image/svg+xml' }],
-  },
+  title: "V-Sticker | Next-Gen AR Manifest",
+  description: "Materialize digital assets into reality with our cutting-edge AR engine. Create, scan, and manage immersive stickers.",
 };
 
 export default function RootLayout({
@@ -22,15 +24,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        {children}
-        <script
-          type="module"
-          async
-          src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Farstickerh7197back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.17"
-        />
-        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" />
+    <html lang="en" className="dark">
+      <body
+        className={`${inter.variable} ${outfit.variable} font-sans antialiased bg-black text-white min-h-screen selection:bg-primary/30 selection:text-primary`}
+      >
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

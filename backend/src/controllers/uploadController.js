@@ -1,7 +1,8 @@
 import Sticker from '../models/Sticker.js';
 import User from '../models/User.js';
-import { uploadWithRetry, generateSignedUrl } from '../services/cloudinaryService.js';
+import { uploadWithRetry, generatePublicUrl } from '../services/cloudinaryService.js';
 import { generateMindFile } from '../services/mindARService.js';
+import { invalidateUniversalCache } from '../services/universalMindService.js';
 import { compressVideo } from '../utils/compressVideo.js';
 import { generateStickerId } from '../utils/generateId.js';
 import logger from '../utils/logger.js';
@@ -63,17 +64,17 @@ export const uploadSticker = async (req, res) => {
 
     logger.info(`MindAR file generated for sticker ${stickerId}`);
 
-    // Upload image to Cloudinary
+    // Upload image to Cloudinary (public URLs — files are uploaded as type: 'upload')
     const imageResult = await uploadWithRetry(image.data, image.name, 'image');
-    const imageUrl = generateSignedUrl(imageResult.public_id, 'image', 3600);
+    const imageUrl = generatePublicUrl(imageResult.public_id, 'image');
 
     // Upload video to Cloudinary
     const videoResult = await uploadWithRetry(videoBuffer, video.name, 'video');
-    const videoUrl = generateSignedUrl(videoResult.public_id, 'video', 3600);
+    const videoUrl = generatePublicUrl(videoResult.public_id, 'video');
 
     // Upload .mind file to Cloudinary
     const mindResult = await uploadWithRetry(mindBuffer, `${stickerId}.mind`, 'raw');
-    const mindUrl = generateSignedUrl(mindResult.public_id, 'raw', 3600);
+    const mindUrl = generatePublicUrl(mindResult.public_id, 'raw');
 
     logger.info(`All files uploaded to Cloudinary for sticker ${stickerId}`);
 
@@ -113,9 +114,12 @@ export const uploadSticker = async (req, res) => {
 
     logger.info(`Sticker created successfully: ${stickerId}`);
 
+    // Invalidate universal scanner cache so new sticker is included
+    invalidateUniversalCache();
+
     // Generate URLs for response
     const arPageUrl = `${process.env.FRONTEND_URL}/ar/${stickerId}`;
-    const scanPageUrl = `${process.env.FRONTEND_URL}/scan/${stickerId}`;
+    const scanPageUrl = `${process.env.FRONTEND_URL}/scanner/${stickerId}`;
 
     res.status(201).json({
       success: true,
@@ -123,6 +127,7 @@ export const uploadSticker = async (req, res) => {
         id: stickerId,
         arPageUrl: arPageUrl,
         scanPageUrl: scanPageUrl,
+        imageUrl: imageUrl,
         expiresAt: expiresAt,
         createdAt: sticker.createdAt
       }

@@ -1,5 +1,25 @@
 import Sticker from '../models/Sticker.js';
+import { generatePublicUrl } from '../services/cloudinaryService.js';
+import { invalidateUniversalCache } from '../services/universalMindService.js';
 import logger from '../utils/logger.js';
+
+/**
+ * Generate fresh public URLs from stored Cloudinary IDs.
+ * Files are uploaded as type: 'upload' (public), so we use public URLs.
+ * The signed/authenticated URLs were returning 404 because of type mismatch.
+ */
+function freshUrls(sticker) {
+  const imageUrl = sticker.cloudinaryImageId
+    ? generatePublicUrl(sticker.cloudinaryImageId, 'image')
+    : sticker.imageUrl;
+  const videoUrl = sticker.cloudinaryVideoId
+    ? generatePublicUrl(sticker.cloudinaryVideoId, 'video')
+    : sticker.videoUrl;
+  const mindFileUrl = sticker.cloudinaryMindId
+    ? generatePublicUrl(sticker.cloudinaryMindId, 'raw')
+    : sticker.mindFileUrl;
+  return { imageUrl, videoUrl, mindFileUrl };
+}
 
 /**
  * GET /ar/:id
@@ -58,15 +78,18 @@ export const getArData = async (req, res) => {
       }
     }
 
+    // Regenerate fresh URLs from Cloudinary IDs (stored URLs expire after 1h)
+    const { imageUrl, videoUrl, mindFileUrl } = freshUrls(sticker);
+
     logger.info(`AR data retrieved for sticker: ${id}`);
 
     res.json({
       success: true,
       data: {
         id: sticker.id,
-        imageUrl: sticker.imageUrl,
-        videoUrl: sticker.videoUrl,
-        mindFileUrl: sticker.mindFileUrl,
+        imageUrl,
+        videoUrl,
+        mindFileUrl,
         options: {
           loop: sticker.options.loop,
           caption: sticker.options.caption
@@ -179,6 +202,9 @@ export const deleteSticker = async (req, res) => {
     // Mark as inactive instead of hard delete (soft delete)
     sticker.isActive = false;
     await sticker.save();
+
+    // Invalidate universal scanner cache so deleted sticker is excluded
+    invalidateUniversalCache();
 
     logger.info(`Sticker deleted: ${id} by user ${userId}`);
 

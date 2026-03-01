@@ -43,12 +43,12 @@ app.use(
 app.use(generalApiRateLimiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // File upload middleware
 app.use(fileUpload({
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
   abortOnLimit: true
 }));
 
@@ -56,6 +56,16 @@ app.use(fileUpload({
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`);
   next();
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'AR Sticker Platform API is running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Health check endpoint

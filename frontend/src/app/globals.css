@@ -1,110 +1,87 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    /* Custom AR Sticker theme colors */
-    --primary: #7C3AFF;
-    --secondary: #00D4FF;
-    --dark: #0A0B14;
-    --dark-lighter: #15172A;
-    --dark-text: #F0F2FF;
-    --dark-secondary: #8B91B8;
-    --dark-tertiary: #4A5080;
-    
-    /* Background and foreground */
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    
-    /* Font variables */
-    --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-geist-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-  }
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  --color-primary: #496DDB;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #3a3f54;
+  --color-secondary-foreground: #fafafa;
+  --color-accent: #717EC3;
+  --color-accent-foreground: #ffffff;
 
-  html {
-    scroll-behavior: smooth;
-  }
+  --color-background: #09090b;
+  --color-foreground: #fafafa;
+  --color-card: #18181b;
+  --color-card-foreground: #fafafa;
+  --color-popover: #09090b;
+  --color-popover-foreground: #fafafa;
 
-  body {
-    background-color: var(--dark);
-    color: var(--dark-text);
-    font-family: var(--font-geist-sans);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  --color-border: #27272a;
+  --color-input: #27272a;
+  --color-ring: #496DDB;
+
+  --color-neon-blue: #496DDB;
+  --color-neon-light: #717EC3;
+  --color-neon-soft: #8b96d4;
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
 }
 
-@layer components {
-  /* Utility classes */
-  .grid-bg {
-    background-image: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 1px,
-        rgba(124, 58, 255, 0.03) 1px,
-        rgba(124, 58, 255, 0.03) 2px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 1px,
-        rgba(124, 58, 255, 0.03) 1px,
-        rgba(124, 58, 255, 0.03) 2px
-      );
-  }
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+}
 
-  .glass {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .input-field {
-    @apply bg-[#15172A] border border-[#4A5080] text-[#F0F2FF] placeholder-[#8B91B8] focus:outline-none focus:border-[#7C3AFF] focus:ring-2 focus:ring-[#7C3AFF]/20 transition-all;
-  }
-
-  .btn-primary {
-    @apply bg-[#7C3AFF] text-white font-semibold hover:bg-[#9B5FFF] active:bg-[#6B2FFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-secondary {
-    @apply bg-[#15172A] border border-[#4A5080] text-[#F0F2FF] font-semibold hover:bg-[#1E1F2E] hover:border-[#7C3AFF] transition-colors disabled:opacity-50;
-  }
-
-  .target-finder-corner {
-    @apply absolute w-12 h-12 border-2 border-[#00D4FF];
-  }
-
-  .target-finder-corner.tl {
-    @apply top-0 left-0 border-r-0 border-b-0;
-  }
-
-  .target-finder-corner.tr {
-    @apply top-0 right-0 border-l-0 border-b-0;
-  }
-
-  .target-finder-corner.bl {
-    @apply bottom-0 left-0 border-r-0 border-t-0;
-  }
-
-  .target-finder-corner.br {
-    @apply bottom-0 right-0 border-l-0 border-t-0;
-  }
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply bg-gradient-to-r from-[#7C3AFF] to-[#00D4FF] bg-clip-text text-transparent;
+  .glass {
+    background: rgba(24, 24, 27, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  .focus-visible-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AFF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0B14];
+  .neon-border {
+    position: relative;
+    border: 1px solid rgba(73, 109, 219, 0.2);
+    box-shadow: 0 0 15px rgba(73, 109, 219, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .neon-border:hover {
+    border-color: rgba(73, 109, 219, 0.4);
+    box-shadow: 0 0 20px rgba(73, 109, 219, 0.1);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #496DDB 0%, #717EC3 50%, #8b96d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: shine 5s linear infinite;
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 15px rgba(73, 109, 219, 0.3);
+  }
+
+  .neon-glow:hover {
+    box-shadow: 0 0 25px rgba(73, 109, 219, 0.5);
+  }
+
+  @keyframes shine {
+    to {
+      background-position: 200% center;
+    }
   }
 }

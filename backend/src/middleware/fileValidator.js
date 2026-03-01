@@ -119,7 +119,17 @@ export const fileValidator = (req, res, next) => {
  */
 export const validateOptions = (req, res, next) => {
   try {
-    const options = req.body.options || {};
+    // Support options sent as JSON string from FormData
+    let rawOptions = req.body.options || {};
+    if (typeof rawOptions === 'string') {
+      try {
+        rawOptions = JSON.parse(rawOptions);
+      } catch {
+        rawOptions = {};
+      }
+      req.body.options = rawOptions;
+    }
+    const options = rawOptions;
 
     // Validate expiryDays
     if (options.expiryDays !== undefined) {

@@ -1,196 +1,136 @@
-import axios from 'axios';
-import FormData from 'form-data';
+import sharp from 'sharp';
+import * as msgpack from '@msgpack/msgpack';
 import logger from '../utils/logger.js';
 
 /**
- * Generate MindAR .mind file from image using online compiler
- * Uses https://mindar.glitch.me/ API for real feature extraction
- * @param {Buffer} imageBuffer - Image file buffer
- * @param {string} imageName - Image file name
- * @returns {Promise<Buffer>} - Generated .mind file buffer
+ * Node.js-compatible MindAR compiler.
+ *
+ * The official OfflineCompiler from mind-ar relies on the native `canvas`
+ * npm package which often fails to build on Windows.  We sidestep that by
+ * sub-classing CompilerBase directly, using `sharp` for image decoding, and
+ * providing a tiny Canvas/Context2D shim so the base class can run its
+ * `compileImageTargets()` pipeline unchanged.
+ */
+
+// ── Imports from mind-ar internals (installed with --ignore-scripts) ───────
+import { CompilerBase } from 'mind-ar/src/image-target/compiler-base.js';
+import { buildTrackingImageList } from 'mind-ar/src/image-target/image-list.js';
+import { extractTrackingFeatures } from 'mind-ar/src/image-target/tracker/extract-utils.js';
+// Ensure CPU kernels are registered (no WebGL on server)
+import 'mind-ar/src/image-target/detector/kernels/cpu/index.js';
+
+/**
+ * Minimal Canvas / Context2D shim used only inside CompilerBase#compileImageTargets.
+ * The base class calls:
+ *   const canvas  = this.createProcessCanvas(img);
+ *   const ctx     = canvas.getContext('2d');
+ *   ctx.drawImage(img, 0, 0, w, h);
+ *   const idata   = ctx.getImageData(0, 0, w, h);
+ *
+ * Our "img" objects already carry raw RGBA pixel data (from sharp), so drawImage
+ * is a no-op copy and getImageData simply returns that buffer.
+ */
+class ShimContext2D {
+  constructor() {
+    this._data = null;
+    this._w = 0;
+    this._h = 0;
+  }
+  drawImage(img /*, x, y, w, h */) {
+    this._data = img.data;   // Uint8Array / Buffer of RGBA pixels
+    this._w = img.width;
+    this._h = img.height;
+  }
+  getImageData(/* x, y, w, h */) {
+    return { data: this._data, width: this._w, height: this._h };
+  }
+}
+
+class ShimCanvas {
+  constructor(w, h) {
+    this.width = w;
+    this.height = h;
+  }
+  getContext(/* type */) {
+    return new ShimContext2D();
+  }
+}
+
+/**
+ * Node-safe compiler that extends CompilerBase with no native canvas dependency.
+ */
+class NodeCompiler extends CompilerBase {
+  createProcessCanvas(img) {
+    return new ShimCanvas(img.width, img.height);
+  }
+
+  compileTrack({ progressCallback, targetImages, basePercent }) {
+    return new Promise((resolve) => {
+      const percentPerImage = (100 - basePercent) / targetImages.length;
+      let percent = 0;
+      const list = [];
+      for (let i = 0; i < targetImages.length; i++) {
+        const imageList = buildTrackingImageList(targetImages[i]);
+        const percentPerAction = percentPerImage / imageList.length;
+        const trackingData = extractTrackingFeatures(imageList, () => {
+          percent += percentPerAction;
+          progressCallback(basePercent + percent);
+        });
+        list.push(trackingData);
+      }
+      resolve(list);
+    });
+  }
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────
+
+/**
+ * Generate a real MindAR .mind file from an image buffer.
+ * @param {Buffer} imageBuffer - Image file buffer (JPEG / PNG / WebP …)
+ * @param {string} imageName   - Original file name (for logging)
+ * @returns {Promise<Buffer>}  - Compiled .mind file buffer
  */
 export const generateMindFile = async (imageBuffer, imageName) => {
-  try {
-    logger.info(`Generating .mind file for ${imageName}`);
-    
-    // Try online compiler first (most reliable)
-    try {
-      const mindBuffer = await compileWithOnlineAPI(imageBuffer, imageName);
-      logger.info(`Successfully generated .mind file via online API: ${imageName} (${mindBuffer.length} bytes)`);
-      return mindBuffer;
-    } catch (apiError) {
-      logger.warn(`Online API compilation failed, using fallback: ${apiError.message}`);
-      // Fallback to local synthetic generation
-      const mindBuffer = createValidMindFile(imageBuffer, imageName);
-      logger.info(`Generated .mind file with fallback method: ${imageName} (${mindBuffer.length} bytes)`);
-      return mindBuffer;
-    }
-  } catch (error) {
-    logger.error(`Error generating .mind file: ${error.message}`);
-    throw error;
-  }
+  logger.info(`Compiling .mind file for ${imageName}`);
+
+  // 1. Decode image to raw RGBA using sharp
+  const { data: rgbaData, info } = await sharp(imageBuffer)
+    .ensureAlpha()               // guarantee 4 channels
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  // Build an "image" object the compiler base class expects
+  const img = {
+    data: new Uint8Array(rgbaData.buffer, rgbaData.byteOffset, rgbaData.byteLength),
+    width: info.width,
+    height: info.height,
+  };
+
+  // 2. Compile
+  const compiler = new NodeCompiler();
+  await compiler.compileImageTargets([img], (progress) => {
+    logger.info(`  .mind compile progress: ${Math.round(progress)}%`);
+  });
+
+  // 3. Export msgpack-encoded .mind buffer
+  const mindData = compiler.exportData();
+  const mindBuffer = Buffer.from(mindData);
+
+  logger.info(`Successfully compiled .mind file for ${imageName} (${(mindBuffer.length / 1024).toFixed(1)} KB)`);
+  return mindBuffer;
 };
 
 /**
- * Compile image using online MindAR compiler API
- * @param {Buffer} imageBuffer - Image buffer
- * @param {string} imageName - Image name
- * @returns {Promise<Buffer>} - Compiled .mind file
- */
-const compileWithOnlineAPI = async (imageBuffer, imageName) => {
-  try {
-    const form = new FormData();
-    form.append('image', imageBuffer, imageName);
-
-    logger.info(`Uploading image to online compiler: ${imageName}`);
-    
-    const response = await axios.post('https://mindar.glitch.me/compile', form, {
-      headers: form.getHeaders(),
-      timeout: 30000,
-      responseType: 'arraybuffer',
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-    });
-
-    if (response.status === 200 && response.data) {
-      logger.info(`Online API returned .mind file: ${response.data.length} bytes`);
-      return Buffer.from(response.data);
-    } else {
-      throw new Error(`Unexpected response status: ${response.status}`);
-    }
-  } catch (error) {
-    logger.error(`Online API error: ${error.message}`);
-    throw error;
-  }
-};
-
-/**
- * Create a valid .mind file structure
- * MindAR .mind format:
- * - Header: "mindar" (magic)
- * - Version: 1
- * - Number of targets
- * - Target metadata and image data
- * 
- * For production, use: https://mindar.glitch.me/
- * @param {Buffer} imageBuffer - Original image buffer
- * @param {string} imageName - Image name
- * @returns {Buffer} - Valid .mind file buffer
- */
-const createValidMindFile = (imageBuffer, imageName) => {
-  try {
-    // Magic header
-    const magic = Buffer.from('mindar');
-    
-    // Version (1 byte, value = 1)
-    const version = Buffer.alloc(1);
-    version.writeUInt8(1, 0);
-    
-    // Number of targets (1 byte, value = 1 for single image)
-    const numTargets = Buffer.alloc(1);
-    numTargets.writeUInt8(1, 0);
-    
-    // Target width (4 bytes, little-endian) - typically 512
-    const width = Buffer.alloc(4);
-    width.writeUInt32LE(512, 0);
-    
-    // Target height (4 bytes, little-endian) - typically 512
-    const height = Buffer.alloc(4);
-    height.writeUInt32LE(512, 0);
-    
-    // Number of features/keypoints (4 bytes) - use a reasonable default
-    const numFeatures = Buffer.alloc(4);
-    numFeatures.writeUInt32LE(100, 0); // Default 100 feature points
-    
-    // Create feature data (simplified)
-    // In a real implementation, this would contain actual SIFT/ORB descriptors
-    const featureData = createFeatureData(imageBuffer);
-    
-    // Combine all parts into final .mind file
-    const mindBuffer = Buffer.concat([
-      magic,           // 6 bytes: "mindar"
-      version,         // 1 byte: version number
-      numTargets,      // 1 byte: number of targets
-      width,           // 4 bytes: width
-      height,          // 4 bytes: height
-      numFeatures,     // 4 bytes: number of features
-      featureData,     // Variable: feature descriptors
-    ]);
-    
-    logger.info(`Created .mind file for "${imageName}": ${mindBuffer.length} bytes`);
-    return mindBuffer;
-    
-  } catch (error) {
-    logger.error(`Error creating .mind file: ${error.message}`);
-    throw error;
-  }
-};
-
-/**
- * Create feature data from image buffer
- * In production, use actual feature detection (ORB, SIFT, AKAZE)
- * For now, create synthetic features based on image content
- * @param {Buffer} imageBuffer - Image buffer
- * @returns {Buffer} - Feature data buffer
- */
-const createFeatureData = (imageBuffer) => {
-  // Create 100 synthetic feature points from image data
-  // Each feature: x (4 bytes), y (4 bytes), descriptor (32 bytes) = 40 bytes per feature
-  const numFeatures = 100;
-  const bytesPerFeature = 40;
-  const totalBytes = numFeatures * bytesPerFeature;
-  
-  const featureBuffer = Buffer.alloc(totalBytes);
-  
-  for (let i = 0; i < numFeatures; i++) {
-    const offset = i * bytesPerFeature;
-    
-    // Pseudo-random coordinates based on image data
-    const seed = imageBuffer[i % imageBuffer.length] || i;
-    const seedHash = (seed * 73856093 ^ (i * 19349663)) | 0;
-    
-    // X coordinate (0-512)
-    const x = Math.abs(seedHash % 512);
-    featureBuffer.writeUInt32LE(x, offset);
-    
-    // Y coordinate (0-512)
-    const y = Math.abs((seedHash >> 16) % 512);
-    featureBuffer.writeUInt32LE(y, offset + 4);
-    
-    // Descriptor (32 bytes of feature data)
-    for (let j = 0; j < 32; j++) {
-      featureBuffer[offset + 8 + j] = (seed + i + j) & 0xFF;
-    }
-  }
-  
-  return featureBuffer;
-};
-
-/**
- * Validate MindAR .mind file
- * @param {Buffer} mindBuffer - .mind file buffer
- * @returns {boolean} - Is valid .mind file
+ * Validate a MindAR .mind file by decoding its msgpack envelope.
+ * @param {Buffer} mindBuffer
+ * @returns {boolean}
  */
 export const validateMindFile = (mindBuffer) => {
-  if (mindBuffer.length < 18) {
-    logger.warn('Mind file too small to validate');
-    return false;
-  }
-  
   try {
-    const magic = mindBuffer.slice(0, 6).toString();
-    const version = mindBuffer.readUInt8(6);
-    const isValid = magic === 'mindar' && version === 1;
-    
-    if (isValid) {
-      logger.info('Mind file validation passed');
-    } else {
-      logger.warn(`Invalid mind file: magic=${magic}, version=${version}`);
-    }
-    
-    return isValid;
-  } catch (error) {
-    logger.error(`Error validating mind file: ${error.message}`);
+    const content = msgpack.decode(new Uint8Array(mindBuffer));
+    return content && content.v === 2 && Array.isArray(content.dataList);
+  } catch {
     return false;
   }
 };
