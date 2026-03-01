@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://aframe.io https://cdn.jsdelivr.net",
               "style-src 'self' 'unsafe-inline'",
-              "connect-src 'self' data: blob: http://localhost:* https://aframe.io https://cdn.jsdelivr.net https://res.cloudinary.com https://*.cloudinary.com https://backend.zynvo.social https://upload.imagekit.io https://zynvo-backend-ho7y.onrender.com https://zynvo-backend-1.onrender.com https://zynvo-backend.onrender.com https://api.dicebear.com https://api.qrserver.com https://eager-bonefish-30.clerk.accounts.dev https://clerk.accounts.dev https://clerk.com",
+              "connect-src 'self' data: blob: http://localhost:* https://aframe.io https://cdn.jsdelivr.net https://res.cloudinary.com https://*.cloudinary.com https://ar-sticker-j4uh.onrender.com https://backend.zynvo.social https://upload.imagekit.io https://zynvo-backend-ho7y.onrender.com https://zynvo-backend-1.onrender.com https://zynvo-backend.onrender.com https://api.dicebear.com https://api.qrserver.com https://eager-bonefish-30.clerk.accounts.dev https://clerk.accounts.dev https://clerk.com",
               "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://images.unsplash.com",
               "media-src 'self' blob: https://res.cloudinary.com https://*.cloudinary.com",
               "frame-src 'self'",

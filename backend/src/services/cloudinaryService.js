@@ -39,7 +39,7 @@ export const uploadToCloudinary = async (fileBuffer, fileName, resourceType = 'i
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: resourceType,
-        public_id: `ar-sticker/${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        public_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         folder: 'ar-sticker',
         overwrite: false,
         unique_filename: true
