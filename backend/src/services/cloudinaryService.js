@@ -78,6 +78,19 @@ export const uploadToCloudinary = async (fileBuffer, fileName, resourceType = 'i
  */
 export const generateSignedUrl = (publicId, resourceType = 'image', expirySeconds = 3600) => {
   try {
+    // For videos, use public unsigned URLs that don't require authentication
+    // This allows the browser to load them directly with CORS support
+    if (resourceType === 'video') {
+      const url = cloudinary.url(publicId, {
+        resource_type: 'video',
+        secure: true,
+        type: 'upload'
+      });
+      logger.info(`Public video URL generated for ${publicId}`);
+      return url;
+    }
+
+    // For images, use signed URLs for added security
     const url = cloudinary.url(publicId, {
       resource_type: resourceType,
       sign_url: true,

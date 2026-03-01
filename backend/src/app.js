@@ -14,6 +14,7 @@ import userRoutes from './routes/user.js';
 
 // Import middleware
 import { generalApiRateLimiter } from './middleware/rateLimiter.js';
+import { auth0OptionalMiddleware } from './middleware/auth0.js';
 
 const app = express();
 
@@ -57,6 +58,9 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`);
   next();
 });
+
+// Optional Auth0 JWT middleware - extracts user info if token is valid
+app.use(auth0OptionalMiddleware);
 
 // Root route
 app.get('/', (req, res) => {

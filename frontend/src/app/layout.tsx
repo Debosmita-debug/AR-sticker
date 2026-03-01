@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { Auth0ProviderWrapper } from "@/components/Auth0ProviderWrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,9 +29,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${outfit.variable} font-sans antialiased bg-black text-white min-h-screen selection:bg-primary/30 selection:text-primary`}
       >
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <Auth0ProviderWrapper>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </Auth0ProviderWrapper>
       </body>
     </html>
   );

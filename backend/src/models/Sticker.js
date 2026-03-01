@@ -14,6 +14,13 @@ const stickerSchema = new mongoose.Schema(
       ref: 'User',
       default: null
     },
+    // Auth0 user ID (optional - if user is authenticated via Auth0)
+    auth0UserId: {
+      type: String,
+      default: null,
+      index: true,
+      sparse: true // Allows null values without unique constraint violation
+    },
     imageUrl: {
       type: String,
       required: [true, 'Image URL is required']

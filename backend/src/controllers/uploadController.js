@@ -87,6 +87,8 @@ export const uploadSticker = async (req, res) => {
     const stickerData = {
       id: stickerId,
       owner: userId,
+      // If authenticated via Auth0, associate with Auth0 user ID
+      auth0UserId: req.user?.id || null,
       imageUrl: imageUrl,
       videoUrl: videoUrl,
       mindFileUrl: mindUrl,
