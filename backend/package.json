@@ -32,13 +32,11 @@
     "helmet": "^7.0.0",
     "isomorphic-dompurify": "^1.11.0",
     "jsonwebtoken": "^9.0.2",
-    "mind-ar": "^1.2.5",
     "mongoose": "^7.5.0",
     "nanoid": "^4.0.2",
     "nodemailer": "^6.9.4",
     "pino": "^8.14.1",
-    "pino-pretty": "^10.2.0",
-    "sharp": "^0.34.5"
+    "pino-pretty": "^10.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
