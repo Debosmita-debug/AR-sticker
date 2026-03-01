@@ -2,6 +2,7 @@ import Sticker from '../models/Sticker.js';
 import User from '../models/User.js';
 import { uploadWithRetry, generatePublicUrl } from '../services/cloudinaryService.js';
 import { generateMindFile } from '../services/mindARService.js';
+import { invalidateUniversalCache } from '../services/universalMindService.js';
 import { compressVideo } from '../utils/compressVideo.js';
 import { generateStickerId } from '../utils/generateId.js';
 import logger from '../utils/logger.js';
@@ -112,6 +113,9 @@ export const uploadSticker = async (req, res) => {
     }
 
     logger.info(`Sticker created successfully: ${stickerId}`);
+
+    // Invalidate universal scanner cache so new sticker is included
+    invalidateUniversalCache();
 
     // Generate URLs for response
     const arPageUrl = `${process.env.FRONTEND_URL}/ar/${stickerId}`;

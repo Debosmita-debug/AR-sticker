@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Copy, Check, ExternalLink, Sparkles, Share2, Rocket, ImageIcon } from "lucide-react";
+import { Copy, Check, ExternalLink, Sparkles, Share2, Rocket, ImageIcon, QrCode } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { QRCodeSVG } from "qrcode.react";
 
 interface UploadSuccessProps {
   arLink: string;
@@ -15,6 +16,7 @@ interface UploadSuccessProps {
 export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: UploadSuccessProps) {
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -44,21 +46,40 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
-          className="w-24 h-24 mx-auto rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30 relative z-10 shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+          className="w-24 h-24 mx-auto rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30 relative z-10 shadow-[0_0_50px_rgba(73,109,219,0.3)]"
         >
           <Rocket className="w-12 h-12 text-primary" />
         </motion.div>
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-4xl font-black text-foreground italic tracking-tight uppercase">Reality Manifested</h2>
-        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-xs">Sticker synchronization successful</p>
+        <h2 className="text-2xl sm:text-4xl font-black text-foreground italic tracking-tight uppercase">Reality Manifested</h2>
+        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-[10px] sm:text-xs">Sticker synchronization successful</p>
       </div>
 
-      <div className="glass rounded-[2.5rem] p-10 neon-border space-y-8 max-w-sm mx-auto shadow-2xl shadow-primary/10">
-        {/* Show the uploaded target image instead of a QR code */}
+      <div className="glass rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-10 neon-border space-y-6 sm:space-y-8 max-w-sm mx-auto shadow-2xl shadow-primary/10">
+        {/* Toggle between target image and QR code */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowQR(!showQR)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/30 transition-all"
+          >
+            <QrCode className="w-3 h-3" />
+            {showQR ? "Show Target Image" : "Show QR Code"}
+          </button>
+        </div>
+
         <div className="bg-white/5 p-4 rounded-3xl inline-block border border-white/5 shadow-inner">
-          {imageUrl ? (
+          {showQR ? (
+            <div className="w-[200px] h-[200px] rounded-2xl bg-white p-3 flex items-center justify-center">
+              <QRCodeSVG
+                value={fullLink}
+                size={176}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+          ) : imageUrl ? (
             <div className="relative w-[200px] h-[200px] rounded-2xl overflow-hidden">
               <Image
                 src={imageUrl}
@@ -83,9 +104,9 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
 
         <div className="space-y-2">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground leading-relaxed">
-            Print this image or show it on a screen.
-            <br />
-            Scan it with the AR camera to see the video.
+            {showQR
+              ? <>Print this QR code and place it near your sticker.<br />Anyone can scan it to see the AR video.</>
+              : <>Print this image or show it on a screen.<br />Scan it with the AR camera to see the video.</>}
           </p>
         </div>
 
@@ -116,7 +137,7 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
           href={scanLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full sm:w-auto px-8 h-14 rounded-2xl bg-primary text-primary-foreground hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 group"
+          className="w-full sm:w-auto px-8 h-14 rounded-2xl bg-primary text-primary-foreground hover:shadow-[0_0_30px_rgba(73,109,219,0.4)] transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 group"
         >
           <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
           Test Payload

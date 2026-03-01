@@ -1,5 +1,41 @@
 import Sticker from '../models/Sticker.js';
+import { getUniversalScannerData } from '../services/universalMindService.js';
 import logger from '../utils/logger.js';
+
+/**
+ * GET /api/scan/universal
+ * Returns the combined .mind file URL and target-index-to-sticker mapping
+ * for the universal scanner (no code / no link required).
+ */
+export const getUniversalTargets = async (req, res) => {
+  try {
+    const data = await getUniversalScannerData();
+
+    if (!data.mindFileUrl || data.targets.length === 0) {
+      return res.json({
+        success: true,
+        data: { mindFileUrl: null, targets: [] }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        mindFileUrl: data.mindFileUrl,
+        targets: data.targets
+      }
+    });
+  } catch (error) {
+    logger.error(`Universal scanner error: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'UNIVERSAL_SCANNER_ERROR',
+        message: error.message
+      }
+    });
+  }
+};
 
 /**
  * POST /api/scan/:id
