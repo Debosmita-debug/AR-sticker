@@ -14,6 +14,7 @@ import React, {
   useRef,
   type ReactNode,
 } from "react";
+import { BACKEND_BASE } from "@/lib/backendBase";
 
 interface AuthUser {
   id: string;
@@ -67,12 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshAt > 0) {
         refreshTimerRef.current = setTimeout(async () => {
           try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/auth/refresh`, {
+            const res = await fetch(`${BACKEND_BASE}/api/auth/refresh`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${currentRefreshToken}`,
               },
+              body: JSON.stringify({ refreshToken: currentRefreshToken }),
             });
             if (res.ok) {
               const data = await res.json();

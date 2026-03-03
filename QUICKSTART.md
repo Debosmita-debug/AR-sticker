@@ -74,7 +74,8 @@ npm install
 
 3. **Verify `env.local` has:**
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+# (Backward compatible) NEXT_PUBLIC_API_URL is also supported
 ```
 
 4. **Start frontend:**
@@ -86,21 +87,24 @@ npm run dev
 ## Testing the Integration
 
 ### 1. Create a Sticker
-- Open http://localhost:3000/upload-creation
-- Upload a target image (JPG/PNG, max 15MB)
-- Upload an AR video (MP4/WebM, max 100MB)
+- Open http://localhost:3000/
+- Upload a target image (JPG/PNG, max 5MB)
+- Upload an AR video (MP4/WebM, max 50MB)
 - Click **Generate AR Sticker**
 - You should see a success response with the sticker ID
 
 ### 2. Scan a Sticker
-- Open http://localhost:3000/ar-scanner?id=<sticker-id>
+- Open http://localhost:3000/scanner/<sticker-id>
 - Grant camera permission
 - Point at the target image
 - AR video should play
+  
+_Tip:_ You can also open http://localhost:3000/scan and paste a sticker ID.
+_Note:_ Universal scanning is not implemented; use sticker-specific links.
 
 ### 3. View Sticker Details
-- Open http://localhost:3000/ar-experience?id=<sticker-id>
-- Should display sticker metadata
+- Open http://localhost:3000/ar/<sticker-id>
+- Should display sticker metadata and launch the scanner
 
 ### 4. Login (Optional)
 - POST to `http://localhost:5000/api/auth/login`
@@ -130,7 +134,7 @@ npm run dev
 
 ### Upload fails
 - Check Cloudinary credentials in backend `.env`
-- Verify file sizes are under limits (image 15MB, video 100MB)
+- Verify file sizes are under limits (image 5MB, video 50MB)
 - Check MongoDB connection
 
 ## Email / SendGrid (Optional)
@@ -163,7 +167,8 @@ Leave SMTP values empty — transactional emails just won't send.
 npm run build
 npm start
 ```
-Set environment variable: `NEXT_PUBLIC_API_URL=https://your-backend.com`
+Set environment variable: `NEXT_PUBLIC_BACKEND_URL=https://your-backend.com`
+(Backward compatible: `NEXT_PUBLIC_API_URL` is also supported)
 
 ### Backend (Railway, Render, Heroku, etc.)
 ```bash

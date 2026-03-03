@@ -11,7 +11,10 @@ export const getUniversalTargets = async (req, res) => {
   try {
     const data = await getUniversalScannerData();
 
-    if (!data.mindFileUrl || data.targets.length === 0) {
+    const mindFileUrl = data?.mindFileUrl ?? null;
+    const targets = Array.isArray(data?.targets) ? data.targets : [];
+
+    if (!mindFileUrl || targets.length === 0) {
       return res.json({
         success: true,
         data: { mindFileUrl: null, targets: [] }
@@ -21,8 +24,8 @@ export const getUniversalTargets = async (req, res) => {
     res.json({
       success: true,
       data: {
-        mindFileUrl: data.mindFileUrl,
-        targets: data.targets
+        mindFileUrl: mindFileUrl,
+        targets: targets
       }
     });
   } catch (error) {

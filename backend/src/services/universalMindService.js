@@ -20,9 +20,10 @@ export const getUniversalScannerData = async () => {
   try {
     logger.info('Universal scanner requested (per-sticker .mind files recommended)');
     return {
-      success: false,
+      mindFileUrl: null,
+      targets: [],
       message: 'Universal scanner not implemented with online compiler. Use sticker-specific scanner instead.',
-      recommendation: 'Share the link: /ar-scanner?id=STICKER_ID'
+      recommendation: 'Share the link: /scanner/STICKER_ID'
     };
   } catch (error) {
     logger.error(`Error getting universal scanner data: ${error.message}`);

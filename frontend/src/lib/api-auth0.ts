@@ -6,8 +6,9 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useCallback } from 'react';
 import { isAuth0Configured } from './auth0-config';
+import { BACKEND_BASE } from './backendBase';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const BASE_URL = BACKEND_BASE;
 
 /**
  * Hook to create API functions with automatic Auth0 token injection
@@ -29,8 +30,10 @@ export function useApiWithAuth0() {
       if (isAuth0Configured && isAuthenticated) {
         try {
           const token = await getAccessTokenSilently({
-            audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-            scope: 'openid profile email',
+            authorizationParams: {
+              audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+              scope: 'openid profile email',
+            },
           });
           headers.Authorization = `Bearer ${token}`;
         } catch (error) {

@@ -127,15 +127,15 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FileDropzone
                   label="Target Image"
-                  description="The image to be scanned"
-                  accept="image/jpeg,image/png,image/webp"
+                  description="The image to be scanned (JPG/PNG, max 5MB)"
+                  accept="image/jpeg,image/png"
                   icon="image"
                   file={image}
                   onFile={setImage}
                 />
                 <FileDropzone
                   label="AR Video"
-                  description="Animated content in AR"
+                  description="Animated content in AR (MP4/WebM, max 50MB)"
                   accept="video/mp4,video/webm"
                   icon="video"
                   file={video}

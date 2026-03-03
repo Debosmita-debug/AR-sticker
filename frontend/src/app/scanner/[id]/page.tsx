@@ -145,7 +145,7 @@ export default function ScannerPage({ params }: PageProps) {
         })
         .catch((err: Error) => {
           if (err.message === "PASSWORD_REQUIRED") { setPhase("password"); }
-          else if (err.message === "INVALID_PASSWORD") { setPwError("Incorrect password. Try again."); }
+          else if (err.message === "INVALID_PASSWORD") { setPwError("Incorrect password. Try again."); setPhase("password"); }
           else if (err.message === "STICKER_EXPIRED") { setPhase("expired"); }
           else { setErrorMsg(err.message || "Failed to load sticker"); setPhase("error"); }
         });

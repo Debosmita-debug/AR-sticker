@@ -31,8 +31,8 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
 
   // Check if expired
   const isExpired = useCallback((data: StickerData) => {
-    if (!data.options.expiresAt) return false;
-    return new Date(data.options.expiresAt) < new Date();
+    if (!data.expiresAt) return false;
+    return new Date(data.expiresAt) < new Date();
   }, []);
 
   // ── Fetch sticker data ────────────────────────────────
@@ -436,7 +436,7 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
               <h2 className="font-heading font-bold text-xl text-[#F0F2FF]">Experience Expired</h2>
               <p className="text-[#8B91B8] text-sm mt-2">This AR sticker has expired and is no longer available.</p>
             </div>
-            <Link href="/upload-creation" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm rounded-btn">
+            <Link href="/" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm rounded-btn">
               <Icon name="PlusCircleIcon" size={15} />
               Create Your Own Sticker
             </Link>
@@ -463,7 +463,7 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
                 <Icon name="ArrowPathIcon" size={15} />
                 Retry
               </button>
-              <Link href="/upload-creation" className="btn-secondary py-3 text-sm rounded-btn flex items-center justify-center gap-2">
+              <Link href="/" className="btn-secondary py-3 text-sm rounded-btn flex items-center justify-center gap-2">
                 <Icon name="HomeIcon" size={15} />
                 Go Home
               </Link>
@@ -518,7 +518,7 @@ export default function ARViewerClient({ stickerId, initialData }: ARViewerClien
             </div>
 
             <Link
-              href="/upload-creation"
+              href="/"
               className="glass flex items-center gap-2 px-4 py-2 rounded-full text-xs text-[#8B91B8] hover:text-white transition-colors border border-[rgba(255,255,255,0.05)]"
             >
               <Icon name="XMarkIcon" size={13} />

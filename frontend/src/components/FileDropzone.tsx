@@ -13,7 +13,7 @@ interface FileDropzoneProps {
   onFile: (f: File | null) => void;
 }
 
-const ALLOWED_IMAGE = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE = ["image/jpeg", "image/png"];
 const ALLOWED_VIDEO = ["video/mp4", "video/webm"];
 
 export default function FileDropzone({ label, description, accept, icon, file, onFile }: FileDropzoneProps) {
@@ -24,15 +24,15 @@ export default function FileDropzone({ label, description, accept, icon, file, o
   const validate = (f: File): boolean => {
     const allowed = icon === "image" ? ALLOWED_IMAGE : ALLOWED_VIDEO;
     if (!allowed.includes(f.type)) {
-      setError(`Format unsupported. Use ${icon === "image" ? "JPG/PNG/WEBP" : "MP4/WEBM"}`);
+      setError(`Format unsupported. Use ${icon === "image" ? "JPG/PNG" : "MP4/WEBM"}`);
       return false;
     }
-    if (f.size > 15 * 1024 * 1024 && icon === "image") {
-      setError("Image exceeds 15MB limit");
+    if (f.size > 5 * 1024 * 1024 && icon === "image") {
+      setError("Image exceeds 5MB limit");
       return false;
     }
-    if (f.size > 100 * 1024 * 1024 && icon === "video") {
-      setError("Video exceeds 100MB capacity");
+    if (f.size > 50 * 1024 * 1024 && icon === "video") {
+      setError("Video exceeds 50MB limit");
       return false;
     }
     setError("");

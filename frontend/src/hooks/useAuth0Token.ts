@@ -16,8 +16,10 @@ export function useAuth0Token() {
 
     try {
       const token = await getAccessTokenSilently({
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-        scope: 'openid profile email',
+        authorizationParams: {
+          audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+          scope: 'openid profile email',
+        },
       });
       return token;
     } catch (error) {

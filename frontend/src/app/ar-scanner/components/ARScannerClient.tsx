@@ -85,7 +85,7 @@ export default function ARScannerClient() {
       stickerDataRef.current = data;
 
       // Check expiry
-      if (data.options.expiresAt && new Date(data.options.expiresAt) < new Date()) {
+      if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
         setState('expired');
         return;
       }
@@ -431,7 +431,7 @@ export default function ARScannerClient() {
               </button>
             </div>
 
-            <Link href="/upload-creation" className="text-xs text-[#4A5080] hover:text-[#8B91B8] transition-colors underline underline-offset-2">
+            <Link href="/" className="text-xs text-[#4A5080] hover:text-[#8B91B8] transition-colors underline underline-offset-2">
               ← Create a Sticker Instead
             </Link>
           </div>
@@ -494,7 +494,7 @@ export default function ARScannerClient() {
                 Unlock & Start Scanning
               </button>
             </form>
-            <Link href="/upload-creation" className="block text-center text-xs text-[#4A5080] hover:text-[#8B91B8] transition-colors">
+            <Link href="/" className="block text-center text-xs text-[#4A5080] hover:text-[#8B91B8] transition-colors">
               ← Go back
             </Link>
           </div>
@@ -512,7 +512,7 @@ export default function ARScannerClient() {
               <h2 className="font-heading font-bold text-xl text-[#F0F2FF]">Sticker Expired</h2>
               <p className="text-[#8B91B8] text-sm mt-2">This AR sticker has passed its expiry date and is no longer available.</p>
             </div>
-            <Link href="/upload-creation" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm rounded-btn">
+            <Link href="/" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm rounded-btn">
               <Icon name="PlusCircleIcon" size={15} />
               Create a New Sticker
             </Link>
@@ -539,7 +539,7 @@ export default function ARScannerClient() {
                 <Icon name="ArrowPathIcon" size={15} />
                 Try Again
               </button>
-              <Link href="/upload-creation" className="btn-secondary py-3 text-sm rounded-btn flex items-center justify-center gap-2">
+              <Link href="/" className="btn-secondary py-3 text-sm rounded-btn flex items-center justify-center gap-2">
                 <Icon name="HomeIcon" size={15} />
                 Go Home
               </Link>
@@ -600,7 +600,7 @@ export default function ARScannerClient() {
             {/* Close button */}
             <div className="flex justify-center mt-3">
               <Link
-                href="/upload-creation"
+                href="/"
                 className="glass flex items-center gap-2 px-4 py-2 rounded-full text-xs text-[#8B91B8] hover:text-white transition-colors border border-[rgba(255,255,255,0.05)]"
               >
                 <Icon name="XMarkIcon" size={13} />

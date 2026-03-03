@@ -3,6 +3,8 @@
  * Auth tokens are managed by AuthContext (in memory only, never localStorage).
  */
 
+import { BACKEND_BASE } from "./backendBase";
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface UploadOptions {
@@ -107,7 +109,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 // ── Upload ───────────────────────────────────────────────────────────────────
 // All requests go directly to the backend, bypassing the Next.js proxy which
 // is unreliable for both large bodies and regular GET requests in v16.
-const BACKEND_DIRECT = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_DIRECT = BACKEND_BASE;
 
 export async function uploadSticker(
   image: File,

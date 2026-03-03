@@ -22,10 +22,21 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
     setOrigin(window.location.origin);
   }, []);
 
-  const fullLink = `${origin}${arLink}`;
+  const baseOrigin = origin || (typeof window !== "undefined" ? window.location.origin : "");
+
+  const normalizeLink = (base: string, link: string) => {
+    if (!link) return "";
+    if (/^https?:\/\//i.test(link)) return link;
+    if (!base) return link;
+    if (link.startsWith("/")) return `${base}${link}`;
+    return `${base}/${link}`;
+  };
+
+  const fullArLink = normalizeLink(baseOrigin, arLink);
+  const fullScanLink = normalizeLink(baseOrigin, scanLink);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(fullLink);
+    await navigator.clipboard.writeText(fullArLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -72,12 +83,12 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
         <div className="bg-white/5 p-4 rounded-3xl inline-block border border-white/5 shadow-inner">
           {showQR ? (
             <div className="w-[200px] h-[200px] rounded-2xl bg-white p-3 flex items-center justify-center">
-              <QRCodeSVG
-                value={fullLink}
-                size={176}
-                level="M"
-                includeMargin={false}
-              />
+                <QRCodeSVG
+                  value={fullArLink}
+                  size={176}
+                  level="M"
+                  includeMargin={false}
+                />
             </div>
           ) : imageUrl ? (
             <div className="relative w-[200px] h-[200px] rounded-2xl overflow-hidden">
@@ -114,7 +125,7 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Access Token Link</p>
           <div className="flex items-center gap-2 glass rounded-2xl p-2 border border-white/5">
             <code className="flex-1 text-[11px] text-zinc-400 truncate px-3 font-mono">
-              {fullLink.replace(/^https?:\/\//, '')}
+              {fullArLink.replace(/^https?:\/\//, '')}
             </code>
             <button
               onClick={copy}
@@ -134,7 +145,7 @@ export default function UploadSuccess({ arLink, scanLink, imageUrl, onReset }: U
           Initialize New
         </button>
         <a
-          href={scanLink}
+          href={fullScanLink}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full sm:w-auto px-8 h-14 rounded-2xl bg-primary text-primary-foreground hover:shadow-[0_0_30px_rgba(73,109,219,0.4)] transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 group"
